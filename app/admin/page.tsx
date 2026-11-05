@@ -6,6 +6,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'usuarios' | 'documentos'>('usuarios');
   const [isModalUsuarioOpen, setIsModalUsuarioOpen] = useState(false);
   const [isModalDocumentoOpen, setIsModalDocumentoOpen] = useState(false);
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<string | null>(null);
 
   useEffect(() => {
     // Cargar FontAwesome dinámicamente si no está presente
@@ -31,6 +32,11 @@ export default function AdminPage() {
     setIsModalDocumentoOpen(false);
   };
 
+  const handleArchivoCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setArchivoSeleccionado(file.name);
+  };
+
   return (
     <div className="bg-slate-100 min-h-screen flex flex-col">
       {/* Navbar Admin */}
@@ -49,7 +55,7 @@ export default function AdminPage() {
       {/* Contenido Principal */}
       <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
         
-        {/* Pestañas de Navegación */}
+        {/* Pestañas de Navegación */
         <div className="flex border-b border-gray-300 gap-4">
           <button
             onClick={() => setActiveTab('usuarios')}
@@ -138,7 +144,7 @@ export default function AdminPage() {
                     <td className="p-4 font-medium">Sistema de Gestión Integral...</td>
                     <td className="p-4">Alberth Rosario - Enmanuel Peña</td>
                     <td className="p-4">Informática</td>
-                    <td className="p-4">Trabajo Especial de Grado</td>
+                    <td className="p-4">Tesis</td>
                     <td className="p-4">2026</td>
                     <td className="p-4 text-center space-x-2">
                       <button onClick={() => setIsModalDocumentoOpen(true)} className="text-blue-600 hover:text-blue-800" title="Editar Documento">
@@ -164,20 +170,20 @@ export default function AdminPage() {
             <h3 className="text-lg font-bold text-gray-800">Editar Datos de Usuario</h3>
             <form onSubmit={handleGuardarUsuario} className="space-y-4">
               <div className="flex gap-2">
-                <select className="border p-2 rounded-lg bg-gray-50 text-sm" disabled defaultValue="V">
+                <select className="border p-2 rounded-lg bg-gray-50 text-sm text-gray-900 cursor-not-allowed" disabled defaultValue="V">
                   <option value="V">V-</option>
                   <option value="E">E-</option>
                   <option value="J">J-</option>
                 </select>
-                <input type="text" placeholder="Cédula" disabled defaultValue="12345678" className="w-full border p-2 rounded-lg text-sm bg-gray-100 text-gray-500 cursor-not-allowed" />
+                <input type="text" placeholder="Cédula" disabled defaultValue="12345678" className="w-full border p-2 rounded-lg text-sm bg-gray-100 text-gray-700 cursor-not-allowed" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Contraseña</label>
-                <input type="text" placeholder="Contraseña de acceso" required className="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" placeholder="Contraseña de acceso" required className="w-full border p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Rol</label>
-                <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="estudiante">Estudiante</option>
                   <option value="admin">Administrador</option>
                 </select>
@@ -199,16 +205,16 @@ export default function AdminPage() {
             <form onSubmit={handleGuardarDocumento} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Título del Documento</label>
-                <input type="text" placeholder="Ej. Sistema de Gestión Integral..." required className="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" placeholder="Ej. Sistema de Gestión Integral..." required className="w-full border p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Autor(es)</label>
-                <input type="text" placeholder="Ej. Alberth Rosario - Enmanuel Peña" required className="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" placeholder="Ej. Alberth Rosario - Enmanuel Peña" required className="w-full border p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">Carrera (Filtro)</label>
-                  <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+<select className="w-full border p-2 rounded-lg text-sm bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Informática">Informática</option>
                     <option value="Contaduría">Contaduría</option>
                     <option value="Administración de Empresas">Administración de Empresas</option>
@@ -218,18 +224,47 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">Tipo de Documento (Filtro)</label>
-                  <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="Trabajo Especial de Grado">Trabajo Especial de Grado</option>
+                  <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Tesis">Tesis</option>
                     <option value="Sistematización">Sistematización</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Año de Publicación (Filtro)</label>
-                <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="2026">2026</option>
-                  <option value="2025">2025</option>
-                </select>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Año de Publicación</label>
+                <input
+                  type="number"
+                  min="2000"
+                  max={new Date().getFullYear()}
+                  placeholder="Ej. 2026"
+                  className="w-full border p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Archivo PDF del documento</label>
+                <div className="relative group">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    required
+                    onChange={handleArchivoCambio}
+                    className="sr-only"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.querySelector('input[type="file"]')?.click()}
+                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 bg-white hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition flex flex-col items-center gap-2"
+                  >
+                    <i className="fa-solid fa-cloud-arrow-up text-lg"></i>
+                    <span>Subir documento PDF</span>
+                  </button>
+                  {archivoSeleccionado && (
+                    <div className="mt-2 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 flex items-center gap-2">
+                      <i className="fa-solid fa-file-pdf text-red-500"></i>
+                      <span>{archivoSeleccionado}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setIsModalDocumentoOpen(false)} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">Cancelar</button>

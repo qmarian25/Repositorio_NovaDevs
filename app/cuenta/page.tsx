@@ -167,7 +167,7 @@ export default function PerfilPage() {
                   </div>
                   <div className="space-y-3">
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      Trabajo Especial de Grado
+                      Tesis
                     </span>
                     <h3 className="font-bold text-gray-900 text-lg leading-snug">
                       Repositorio Web Institucional de Tesis y Sistematizaciones

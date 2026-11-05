@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [tipoCedula, setTipoCedula] = useState('V');
   const [cedula, setCedula] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -86,27 +85,16 @@ export default function LoginPage() {
             <label htmlFor="cedula" className="block text-sm font-semibold text-slate-700 mb-1">
               Cédula de Identidad
             </label>
-            <div className="flex rounded-lg shadow-sm">
-              <select
-                value={tipoCedula}
-                onChange={(e) => setTipoCedula(e.target.value)}
-                className="bg-slate-50 border border-r-0 border-slate-300 text-slate-700 text-sm rounded-l-lg focus:ring-2 focus:ring-blue-500 px-3 outline-none"
-              >
-                <option value="V">V-</option>
-                <option value="E">E-</option>
-                <option value="J">J-</option>
-              </select>
-              <input
-                type="text"
-                id="cedula"
-                value={cedula}
-                onChange={(e) => setCedula(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="12345678"
-                maxLength={9}
-                required
-                className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-r-lg focus:ring-2 focus:ring-blue-500 p-3 outline-none"
-              />
-            </div>
+            <input
+              type="text"
+              id="cedula"
+              value={cedula}
+              onChange={(e) => setCedula(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="12345678"
+              maxLength={10}
+              required
+              className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 p-3 outline-none"
+            />
           </div>
 
           {/* Campo Contraseña */}
@@ -142,6 +130,21 @@ export default function LoginPage() {
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
+
+          <div className="text-right mt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setAlertInfo({
+                  message: 'Se enviará un enlace de recuperación a tu correo registrado.',
+                  type: 'success',
+                });
+              }}
+              className="text-sm text-blue-600 hover:underline font-medium"
+            >
+              ¿Olvidó su contraseña?
+            </button>
+          </div>
         </form>
       </div>
     </div>
