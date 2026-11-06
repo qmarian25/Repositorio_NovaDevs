@@ -3,45 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import NavbarUser from '@/components/NavbarUser';
 import Footer from '@/components/Footer';
+import { DOCUMENTOS } from '@/lib/documents';
 
 export default function Page() {
-  const [documentos, setDocumentos] = useState([
-    {
-      id: 1,
-      titulo: 'Repositorio Web Institucional de Tesis y Sistematizaciones',
-      categoria: 'Tesis',
-      portada: 'https://imgv2-2-f.scribdassets.com/img/document/784044070/original/e9a4f964af/1?v=1',
-      guardado: true,
-    },
-    {
-      id: 2,
-      titulo: 'Cisco CCNA 2 Module 6: EtherChannel y Redes',
-      categoria: 'Sistematización',
-      portada: 'https://website-assets.studocu.com/img/document_thumbnails/48b0618d11356cd674ea7ebfb902d872/thumb_300_388.png',
-      guardado: false,
-    },
-    {
-      id: 3,
-      titulo: 'Arquitectura de Redes y Seguridad Informática Avanzada',
-      categoria: 'Tesis',
-      portada: 'https://imgv2-2-f.scribdassets.com/img/document/200506656/original/ef88cf9f1e/1?v=1',
-      guardado: false,
-    },
-    {
-      id: 4,
-      titulo: 'Gestión de Bases de Datos Normalizadas con PHP y MySQL',
-      categoria: 'Tesis',
-      portada: 'https://imgv2-2-f.scribdassets.com/img/document/658295236/original/49032fcde1/1?v=1',
-      guardado: true,
-    },
-    {
-      id: 5,
-      titulo: 'Desarrollo de Aplicaciones Web con Next.js y Tailwind CSS',
-      categoria: 'Sistematización',
-      portada: 'https://imgv2-1-f.scribdassets.com/img/document/450099540/original/16409224f3/1?v=1',
-      guardado: false,
-    }
-  ]);
+  const [documentos, setDocumentos] = useState<typeof DOCUMENTOS>(DOCUMENTOS);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -60,8 +25,10 @@ export default function Page() {
   }, [documentos]);
 
   const toggleGuardado = (id: number) => {
-    setDocumentos(docs => 
-      docs.map(doc => doc.id === id ? { ...doc, guardado: !doc.guardado } : doc)
+    setDocumentos((docs: typeof DOCUMENTOS) =>
+      docs.map((doc: (typeof DOCUMENTOS)[number]) =>
+        doc.id === id ? { ...doc, guardado: !doc.guardado } : doc
+      )
     );
   };
 
@@ -81,7 +48,7 @@ export default function Page() {
           id="listaResultados" 
           className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
         >
-          {documentos.map((doc) => (
+          {documentos.map((doc: (typeof DOCUMENTOS)[number]) => (
             <div 
               key={doc.id}
               className="documento-card bg-white border border-gray-200/90 rounded-lg sm:rounded-xl md:rounded-2xl p-1.5 sm:p-2 md:p-3 shadow-xs hover:shadow-md transition flex flex-col justify-between group relative bg-gradient-to-b from-white to-gray-50/30 w-full min-w-0 overflow-hidden"
@@ -94,7 +61,7 @@ export default function Page() {
                 
                 {/* Portada con Etiqueta PDF */}
                 <div className="relative min-w-0">
-                  <a href="/visor" className="block w-full h-24 xs:h-28 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
+                  <a href={`/visor?id=${doc.id}`} className="block w-full h-24 xs:h-28 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
                     <div className="w-full h-full rounded-sm sm:rounded-md md:rounded-lg overflow-hidden relative">
                       <img 
                         src={doc.portada} 
@@ -125,7 +92,7 @@ export default function Page() {
                     {doc.categoria}
                   </span>
                   
-                  <a href="/visor" className="block min-w-0">
+                  <a href={`/visor?id=${doc.id}`} className="block min-w-0">
                     <h3 className="font-bold text-gray-900 text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
                       {doc.titulo}
                     </h3>
