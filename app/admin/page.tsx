@@ -55,7 +55,7 @@ export default function AdminPage() {
       {/* Contenido Principal */}
       <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
         
-        {/* Pestañas de Navegación */
+       
         <div className="flex border-b border-gray-300 gap-4">
           <button
             onClick={() => setActiveTab('usuarios')}
