@@ -101,10 +101,6 @@ function VisorContent() {
               {documento.autor}
             </span>
           </div>
-          <div>
-            <span className="font-semibold text-gray-700 block">Año de Publicación:</span>
-            <span id="anioDocumento" className="text-gray-600">{documento.anio}</span>
-          </div>
         </div>
 
         <div>
