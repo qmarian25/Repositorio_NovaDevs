@@ -55,7 +55,6 @@ export default function AdminPage() {
       {/* Contenido Principal */}
       <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
         
-       
         <div className="flex border-b border-gray-300 gap-4">
           <button
             onClick={() => setActiveTab('usuarios')}
@@ -214,7 +213,7 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">Carrera (Filtro)</label>
-<select className="w-full border p-2 rounded-lg text-sm bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500">
+                  <select className="w-full border p-2 rounded-lg text-sm bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Informática">Informática</option>
                     <option value="Contaduría">Contaduría</option>
                     <option value="Administración de Empresas">Administración de Empresas</option>
@@ -252,7 +251,7 @@ export default function AdminPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => document.querySelector('input[type="file"]')?.click()}
+                    onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                     className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 bg-white hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition flex flex-col items-center gap-2"
                   >
                     <i className="fa-solid fa-cloud-arrow-up text-lg"></i>
