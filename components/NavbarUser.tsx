@@ -133,7 +133,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                     <button onClick={() => (window as any).seleccionarFiltro('tipo', 'Sistematización')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Sistematización</button>
                   </div>
                 </div>
-
+              {/*
                 <div>
                   <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Año de Publicación</h4>
                   <div className="space-y-1">
@@ -141,6 +141,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                     <button onClick={() => (window as any).seleccionarFiltro('anio', '2025')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">2025</button>
                   </div>
                 </div>
+              */}
               </aside>
             )}
 
@@ -185,13 +186,14 @@ export default function NavbarUser({ children }: NavbarUserProps) {
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Año de Publicación</h4>
               <div className="space-y-1">
                 <button onClick={() => { (window as any).seleccionarFiltro('anio', '2026'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">2026</button>
                 <button onClick={() => { (window as any).seleccionarFiltro('anio', '2025'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">2025</button>
               </div>
-            </div>
+            </div> */}
+
           </div>
 
           <div className="pt-4 border-t">
