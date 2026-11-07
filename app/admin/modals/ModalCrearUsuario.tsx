@@ -130,7 +130,7 @@ export default function ModalCrearUsuario({ onClose, onGuardado }: Props) {
                 type="text"
                 inputMode="numeric"
                 maxLength={8}
-                placeholder="Ej. 12345678"
+                placeholder="Ej. 30123456"
                 value={form.nombre_usuario || ''}
                 onChange={(e) => {
                   // Bloquea letras y limita a 8 caracteres

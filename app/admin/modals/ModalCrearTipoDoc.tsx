@@ -79,7 +79,7 @@ export default function ModalCrearTipoDoc({ onClose, onGuardado }: Props) {
               <label className="block text-xs font-semibold text-gray-600 mb-1">Nombre del Tipo *</label>
               <input
                 type="text"
-                placeholder="Ej. Tesis, Trabajo de Grado..."
+                placeholder="Ej. Tesis, Sistematización..."
                 value={nombre}
                 onChange={(e) => { 
                   setNombre(soloLetras(e.target.value)); 
