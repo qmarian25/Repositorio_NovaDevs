@@ -100,6 +100,7 @@ function VisorContent() {
             <span id="autoresDocumento" className="text-gray-600">
               {documento.autor}
             </span>
+            
           </div>
         </div>
 
