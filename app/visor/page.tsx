@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NavbarUser from '@/components/NavbarUser';
 import { supabase } from '@/lib/supabase';
@@ -247,5 +247,9 @@ function VisorContent() {
 }
 
 export default function DetalleVisorPage() {
-  return <VisorContent />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] text-gray-500">Cargando visor...</div>}>
+      <VisorContent />
+    </Suspense>
+  );
 }
