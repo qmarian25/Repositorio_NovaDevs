@@ -210,7 +210,7 @@ export default function ModalCrearUsuario({ onClose, onGuardado }: Props) {
               <label className="block text-xs font-semibold text-gray-600 mb-1">Contraseña *</label>
               <input
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={form.contrasena}
                 onChange={(e) => {
                   setForm({ ...form, contrasena: e.target.value });

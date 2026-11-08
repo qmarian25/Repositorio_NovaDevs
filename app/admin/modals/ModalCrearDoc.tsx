@@ -45,6 +45,12 @@ export default function ModalCrearDoc({
 
   useEffect(() => {
     setComponenteMontado(true);
+    // Cargar PDF.js dinámicamente para generar la portada
+    if (!(window as any).pdfjsLib) {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      document.body.appendChild(script);
+    }
   }, []);
 
   const mostrarAviso = (
@@ -121,13 +127,77 @@ export default function ModalCrearDoc({
 
     setGuardando(true);
     try {
+      //  SUBIR EL ARCHIVO A SUPABASE STORAGE
+      let urlPublica = '';
+      if (archivoSeleccionado) {
+        const nombreLimpio = archivoSeleccionado.name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/ñ/g, 'n')
+          .replace(/Ñ/g, 'N')
+          .replace(/[^a-zA-Z0-9.-]/g, '_');
+        
+        const nombreArchivo = `${Date.now()}_${nombreLimpio}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('documentos')
+          .upload(nombreArchivo, archivoSeleccionado);
+
+        if (uploadError) throw new Error(`Error al subir el PDF: ${uploadError.message}`);
+
+        const { data: urlData } = supabase.storage
+          .from('documentos')
+          .getPublicUrl(uploadData.path);
+
+        urlPublica = urlData.publicUrl;
+      }
+
+      // GENERAR Y SUBIR LA MINIATURA (PORTADA)
+      let urlPortada = '';
+      try {
+        const pdfjsLib = (window as any).pdfjsLib;
+        if (pdfjsLib) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const loadingTask = pdfjsLib.getDocument(urlPublica);
+          const pdf = await loadingTask.promise;
+          const page = await pdf.getPage(1);
+          
+          const viewport = page.getViewport({ scale: 0.5 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          
+          if (context) {
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport: viewport } as any).promise;
+            
+            const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.8));
+            if (blob) {
+              const nombreMiniatura = `portada_${Date.now()}.jpg`;
+              const { data: uploadMini } = await supabase.storage
+                .from('documentos')
+                .upload(nombreMiniatura, blob);
+              
+              if (uploadMini) {
+                const { data: urlMini } = supabase.storage.from('documentos').getPublicUrl(uploadMini.path);
+                urlPortada = urlMini.publicUrl;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo generar la miniatura:', err);
+      }
+
+      // INSERTAR EL REGISTRO EN LA BASE DE DATOS
       const { data: docData, error: docError } = await supabase
         .from('documentos')
         .insert([
           {
             titulo: docForm.titulo.trim(),
             descripcion: docForm.descripcion.trim(),
-            url_archivo: archivoSeleccionado ? archivoSeleccionado.name : 'archivo.pdf',
+            url_archivo: urlPublica,
+            url_portada: urlPortada, 
             fecha_publicacion: docForm.fecha_publicacion,
             id_usuario: 1,
             id_tipo_documento: parseInt(docForm.tipo_documento),
@@ -139,12 +209,14 @@ export default function ModalCrearDoc({
       if (docError) throw docError;
       const nuevoDocumentoId = docData[0].id_documento;
 
+      // Guardar Autores
       const autoresInserts = autoresSeleccionados.map((a) => ({
         id_documento: nuevoDocumentoId,
         id_usuario: a.id_usuario,
       }));
       await supabase.from('documentos_autores').insert(autoresInserts);
 
+      // Guardar Etiquetas
       for (const etiquetaNombre of etiquetasDoc) {
         let { data: etiquetaData } = await supabase
           .from('etiquetas')
@@ -420,7 +492,6 @@ export default function ModalCrearDoc({
         </div>
       </div>
 
-      {/* Modal aviso interno */}
       {componenteMontado &&
         modalAviso &&
         createPortal(

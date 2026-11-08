@@ -9,16 +9,14 @@ import ModalEliminarDoc from '../modals/ModalEliminarDoc';
 import PdfThumbnail from '../modals/PdfThumbnail';
 
 export default function SeccionDocumentos() {
-  // Listas para los modales (solo activos)
   const [listaCarreras, setListaCarreras] = useState<Carrera[]>([]);
   const [listaTiposDoc, setListaTiposDoc] = useState<TipoDocumento[]>([]);
   const [usuariosActivos, setUsuariosActivos] = useState<Autor[]>([]);
 
-  // Listas completas (activos e inactivos) para mostrar en las tarjetas
   const [todasCarreras, setTodasCarreras] = useState<Carrera[]>([]);
   const [todosTiposDoc, setTodosTiposDoc] = useState<TipoDocumento[]>([]);
 
-  const [listaDocumentos, setListaDocumentos] = useState<Documento[]>([]);
+  const [listaDocumentos, setListaDocumentos] = useState<any[]>([]);
   const [autoresPorDocumento, setAutoresPorDocumento] = useState<Record<number, Autor[]>>({});
 
   const [isModalCrearDocOpen, setIsModalCrearDocOpen] = useState(false);
@@ -28,7 +26,6 @@ export default function SeccionDocumentos() {
   const [docAEliminar, setDocAEliminar] = useState<Documento | null>(null);
 
   const cargarDatosReales = async () => {
-    // 1. TODAS las carreras
     const { data: carrerasData } = await supabase
       .from('carrera')
       .select('*')
@@ -38,7 +35,6 @@ export default function SeccionDocumentos() {
       setListaCarreras(carrerasData.filter(c => c.activo !== false));
     }
 
-    // 2. TODOS los tipos de documento
     const { data: tiposData } = await supabase
       .from('tipo_documento')
       .select('*')
@@ -48,7 +44,6 @@ export default function SeccionDocumentos() {
       setListaTiposDoc(tiposData.filter(t => t.activo !== false));
     }
 
-    // 3. TODOS los usuarios (para mapear autores en tarjetas)
     const { data: usuariosData } = await supabase.from('usuario').select('*');
     let todosAutoresMapeados: Autor[] = [];
     if (usuariosData) {
@@ -57,11 +52,9 @@ export default function SeccionDocumentos() {
         nombre_usuario: u.nombre_usuario,
         nombreCompleto: `${u.nombre} ${u.apellido}`,
       }));
-      // Solo los activos van al modal
       setUsuariosActivos(todosAutoresMapeados.filter(u => (u as any).activo !== false));
     }
 
-    // 4. Documentos activos
     const { data: docsData } = await supabase
       .from('documentos')
       .select('*')
@@ -69,7 +62,6 @@ export default function SeccionDocumentos() {
       .order('id_documento', { ascending: true });
     if (docsData) setListaDocumentos(docsData);
 
-    // 5. Relaciones de autores (usando TODOS los usuarios mapeados)
     if (docsData && docsData.length > 0 && todosAutoresMapeados.length > 0) {
       const idsDocs = docsData.map((d: any) => d.id_documento);
       const { data: relaciones } = await supabase
@@ -109,7 +101,7 @@ export default function SeccionDocumentos() {
     setIsModalEliminarOpen(true);
   };
 
-return (
+  return (
     <div className="w-full flex justify-center px-4">
       <section className="space-y-4 w-full max-w-4xl">
         <div className="flex justify-between items-center w-full">
@@ -149,7 +141,12 @@ return (
                   key={doc.id_documento}
                   className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6 overflow-hidden w-full"
                 >
-                  <PdfThumbnail url={doc.url_archivo} titulo={doc.titulo} />
+                  {/* ✅ USAMOS LA URL DE LA PORTADA (IMAGEN) */}
+                  <PdfThumbnail 
+                    urlPortada={doc.url_portada} 
+                    titulo={doc.titulo} 
+                    className="w-full sm:w-28 h-36 bg-gray-100 border border-gray-300 rounded-lg shadow-sm flex-shrink-0" 
+                  />
 
                   <div className="flex-1 min-w-0 w-full space-y-1.5">
                     <h3 className="text-lg font-bold text-gray-900 leading-snug line-clamp-1 break-words" title={doc.titulo}>
