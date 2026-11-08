@@ -96,7 +96,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             
             {/* SIDEBAR DE FILTROS POR FACETAS */}
             {!esVistaSimple && (
-              <aside className="hidden md:block w-64 bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-6 flex-shrink-0">
+              <aside className="hidden md:block w-64 bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-6 flex-shrink-0 sticky top-6 max-h-[calc(100vh-14rem)] overflow-y-auto">
                 <h3 className="font-bold text-gray-800 text-base border-b pb-2">Filtros por Facetas</h3>
                 
                 <div>
@@ -131,7 +131,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             )}
 
             {/* Contenido inyectado por las páginas */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-y-auto">
               {children}
             </div>
           </div>
