@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import NavbarUser from '@/components/NavbarUser';
 import { supabase } from '@/lib/supabase';
+import { SearchX, Bookmark } from 'lucide-react';
 import PdfThumbnail from './admin/modals/PdfThumbnail';
 
 interface DocumentoReal {
@@ -58,22 +59,6 @@ export default function Page() {
     cargarDocumentos();
   }, []);
 
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/lucide@latest';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).lucide) {
-        (window as any).lucide.createIcons();
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      script.remove();
-    };
-  }, [documentos]);
-
   const toggleGuardado = (id: number) => {
     setDocumentos((docs) =>
       docs.map((doc) =>
@@ -99,7 +84,7 @@ export default function Page() {
         ) : documentos.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center space-y-4 w-full">
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
-              <i data-lucide="search-x" className="h-8 w-8"></i>
+              <SearchX className="h-8 w-8" />
             </div>
             <h3 className="text-lg font-bold text-gray-800">No hay documentos registrados</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
@@ -140,7 +125,7 @@ export default function Page() {
                       title={doc.guardado ? "Quitar de guardados" : "Guardar documento"}
                       className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 md:top-2.5 md:right-2.5 p-0.5 sm:p-1 md:p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-700 shadow-sm transition z-10"
                     >
-                      <i data-lucide="bookmark" className={`h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 transition-colors ${doc.guardado ? 'fill-blue-700 text-blue-700' : 'text-gray-500 hover:text-blue-700'}`}></i>
+                      <Bookmark className={`h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 transition-colors ${doc.guardado ? 'fill-blue-700 text-blue-700' : 'text-gray-500 hover:text-blue-700'}`} />
                     </button>
                   </div>
 

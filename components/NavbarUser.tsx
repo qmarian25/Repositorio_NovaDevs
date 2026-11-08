@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import Footer from '@/components/Footer';
+import { Search, UserCircle, ChevronDown, Settings, LogOut, Filter, X } from 'lucide-react';
 
 interface NavbarUserProps {
   children?: ReactNode;
@@ -11,22 +12,6 @@ interface NavbarUserProps {
 export default function NavbarUser({ children }: NavbarUserProps) {
   const pathname = usePathname();
   const esVistaSimple = pathname === '/visor' || pathname === '/cuenta';
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/lucide@latest';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).lucide) {
-        (window as any).lucide.createIcons();
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      script.remove();
-    };
-  }, []);
 
   return (
     <>
@@ -42,7 +27,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             
             {/* 2. Centro: Barra de Búsqueda Integrada en el Navbar */}
             <div className="flex-1 max-w-xl relative hidden sm:block">
-              <i data-lucide="search" className="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <input 
                   type="text" 
                   id="inputBusqueda"
@@ -55,20 +40,20 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             {/* 3. Derecha: Menú de Perfil */}
             <div className="relative flex-shrink-0">
               <button onClick={(e) => (window as any).toggleMenuPerfil(e)} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3.5 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
-                <i data-lucide="user-circle" className="h-5 w-5"></i>
+                <UserCircle className="h-5 w-5" />
                 <span>Mariam Quesada</span>
-                <i data-lucide="chevron-down" className="h-4 w-4"></i>
+                <ChevronDown className="h-4 w-4" />
               </button>
 
               <div id="menuPerfil" className="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 text-gray-800">
                 <div className="py-1">
                   <a href="/cuenta" className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition">
-                    <i data-lucide="settings" className="h-4 w-4 text-gray-600"></i> Configuración de perfil
+                    <Settings className="h-4 w-4 text-gray-600" /> Configuración de perfil
                   </a>
                 </div>
                 <div className="border-t border-gray-100 pt-1">
                   <a href="#" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
-                    <i data-lucide="log-out" className="h-4 w-4"></i> Cerrar sesión
+                    <LogOut className="h-4 w-4" /> Cerrar sesión
                   </a>
                 </div>
               </div>
@@ -82,7 +67,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
           {/* Barra de búsqueda móvil (visible solo en pantallas pequeñas) */}
           <div className="flex sm:hidden gap-3 mb-4">
             <div className="relative flex-1">
-              <i data-lucide="search" className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"></i>
+              <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
               <input 
                   type="text" 
                   onInput={() => (window as any).filtrarDocumentos()}
@@ -92,7 +77,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             </div>
             {!esVistaSimple && (
               <button onClick={() => (window as any).toggleDrawer(true)} className="flex items-center gap-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0">
-                <i data-lucide="filter" className="h-5 w-5"></i> Filtros
+                <Filter className="h-5 w-5" /> Filtros
               </button>
             )}
           </div>
@@ -161,7 +146,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
           <div className="flex items-center justify-between border-b pb-4">
             <h3 className="font-bold text-gray-900 text-lg">Filtros por Facetas</h3>
             <button onClick={() => (window as any).toggleDrawer(false)} className="p-2 text-gray-500 hover:text-gray-800 rounded-lg">
-              <i data-lucide="x" className="h-6 w-6"></i>
+              <X className="h-6 w-6" />
             </button>
           </div>
 

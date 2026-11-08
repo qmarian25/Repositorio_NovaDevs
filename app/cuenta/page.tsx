@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import NavbarUser from '@/components/NavbarUser';
+import { User, Bookmark, Heart, FileText } from 'lucide-react';
 
 export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState<'cuenta' | 'guardados' | 'likes'>('cuenta');
@@ -9,23 +10,6 @@ export default function PerfilPage() {
   // Estados para los botones interactivos de las tarjetas
   const [isSaved, setIsSaved] = useState(true);
   const [isLiked, setIsLiked] = useState(true);
-
-  useEffect(() => {
-    // Inicializar iconos de Lucide dinámicamente
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/lucide@latest';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).lucide) {
-        (window as any).lucide.createIcons();
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      script.remove();
-    };
-  }, [activeTab, isSaved, isLiked]);
 
   return (
     <NavbarUser>
@@ -67,7 +51,7 @@ export default function PerfilPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              <i data-lucide="user" className="h-4 w-4"></i> Datos de la Cuenta
+              <User className="h-4 w-4" /> Datos de la Cuenta
             </button>
             <button
               onClick={() => setActiveTab('guardados')}
@@ -77,7 +61,7 @@ export default function PerfilPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              <i data-lucide="bookmark" className="h-4 w-4"></i> Documentos Guardados
+              <Bookmark className="h-4 w-4" /> Documentos Guardados
             </button>
             <button
               onClick={() => setActiveTab('likes')}
@@ -87,7 +71,7 @@ export default function PerfilPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              <i data-lucide="heart" className="h-4 w-4"></i> Me Gusta
+              <Heart className="h-4 w-4" /> Me Gusta
             </button>
           </div>
 
@@ -162,7 +146,7 @@ export default function PerfilPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition">
                 <div className="flex items-center gap-6 w-full">
                   <div className="w-28 h-36 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-inner flex-shrink-0">
-                    <i data-lucide="file-text" className="h-10 w-10 mb-2 text-blue-600"></i>
+                    <FileText className="h-10 w-10 mb-2 text-blue-600" />
                     <span>PDF</span>
                   </div>
                   <div className="space-y-3">
@@ -184,7 +168,7 @@ export default function PerfilPage() {
                     title={isSaved ? "Quitar de guardados" : "Guardar documento"}
                     className="p-3 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition"
                   >
-                    <i data-lucide="bookmark" className={`h-4 w-4 ${isSaved ? "fill-blue-600" : ""}`}></i>
+                    <Bookmark className={`h-4 w-4 ${isSaved ? "fill-blue-600" : ""}`} />
                   </button>
                 </div>
               </div>
@@ -202,7 +186,7 @@ export default function PerfilPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition">
                 <div className="flex items-center gap-6 w-full">
                   <div className="w-28 h-36 bg-red-50 border border-red-200 text-red-700 rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-inner flex-shrink-0">
-                    <i data-lucide="file-text" className="h-10 w-10 mb-2 text-red-600"></i>
+                    <FileText className="h-10 w-10 mb-2 text-red-600" />
                     <span>PDF</span>
                   </div>
                   <div className="space-y-3">
@@ -224,7 +208,7 @@ export default function PerfilPage() {
                     title={isLiked ? "Quitar Me gusta" : "Dar Me gusta"}
                     className="p-3 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition"
                   >
-                    <i data-lucide="heart" className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : "text-gray-400"}`}></i>
+                    <Heart className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
                   </button>
                 </div>
               </div>
