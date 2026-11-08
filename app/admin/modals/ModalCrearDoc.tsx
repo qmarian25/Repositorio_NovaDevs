@@ -65,16 +65,21 @@ export default function ModalCrearDoc({
     return new Date(d.getTime() - tzOffset).toISOString().split('T')[0];
   };
 
+  const agregarEtiqueta = () => {
+    if (inputEtiqueta.trim() === '') return;
+    if (etiquetasDoc.length >= 10) {
+      mostrarAviso('advertencia', 'Límite de etiquetas', 'Máximo 10 etiquetas por documento.');
+      return;
+    }
+    const nuevaTag = inputEtiqueta.trim().toLowerCase();
+    if (!etiquetasDoc.includes(nuevaTag)) setEtiquetasDoc([...etiquetasDoc, nuevaTag]);
+    setInputEtiqueta('');
+  };
+
   const handleKeyDownEtiqueta = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputEtiqueta.trim() !== '') {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      if (etiquetasDoc.length >= 10) {
-        mostrarAviso('advertencia', 'Límite de etiquetas', 'Máximo 10 etiquetas por documento.');
-        return;
-      }
-      const nuevaTag = inputEtiqueta.trim().toLowerCase();
-      if (!etiquetasDoc.includes(nuevaTag)) setEtiquetasDoc([...etiquetasDoc, nuevaTag]);
-      setInputEtiqueta('');
+      agregarEtiqueta();
     }
   };
 
@@ -343,17 +348,27 @@ export default function ModalCrearDoc({
 
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
-                Etiquetas (Máx. 10 - Presiona Enter) *
+                Etiquetas (Máx. 10) *
               </label>
-              <input
-                type="text"
-                placeholder="Ej. Tesis, PHP..."
-                value={inputEtiqueta}
-                onChange={(e) => setInputEtiqueta(e.target.value)}
-                onKeyDown={handleKeyDownEtiqueta}
-                className="w-full border border-gray-300 p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-              />
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  placeholder="Ej. Tesis, PHP..."
+                  value={inputEtiqueta}
+                  onChange={(e) => setInputEtiqueta(e.target.value)}
+                  onKeyDown={handleKeyDownEtiqueta}
+                  className="flex-1 border border-gray-300 p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={agregarEtiqueta}
+                  disabled={guardando || inputEtiqueta.trim() === '' || etiquetasDoc.length >= 10}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-blue-700 transition"
+                >
+                  Agregar
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
                 {etiquetasDoc.map((tag, idx) => (
                   <span
                     key={idx}
