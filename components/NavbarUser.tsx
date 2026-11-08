@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { Search, UserCircle, ChevronDown, Settings, LogOut, Filter, X } from 'lucide-react';
@@ -12,6 +12,13 @@ interface NavbarUserProps {
 export default function NavbarUser({ children }: NavbarUserProps) {
   const pathname = usePathname();
   const esVistaSimple = pathname === '/visor' || pathname === '/cuenta';
+  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Placeholder temporal: aquí se inyectará el nombre del usuario autenticado
+    // cuando se enlace con Supabase Auth. Por ahora inicia vacío.
+    setNombreUsuario(null);
+  }, []);
 
   return (
     <>
@@ -41,7 +48,11 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             <div className="relative flex-shrink-0">
               <button onClick={(e) => (window as any).toggleMenuPerfil(e)} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3.5 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
                 <UserCircle className="h-5 w-5" />
-                <span>Mariam Quesada</span>
+                {nombreUsuario ? (
+                  <span>{nombreUsuario}</span>
+                ) : (
+                  <span className="text-gray-300">Usuario</span>
+                )}
                 <ChevronDown className="h-4 w-4" />
               </button>
 

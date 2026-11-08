@@ -8,8 +8,8 @@ export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState<'cuenta' | 'guardados' | 'likes'>('cuenta');
   
   // Estados para los botones interactivos de las tarjetas
-  const [isSaved, setIsSaved] = useState(true);
-  const [isLiked, setIsLiked] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
   return (
     <NavbarUser>
@@ -140,37 +140,13 @@ export default function PerfilPage() {
             <div className="space-y-6 w-full">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Títulos Guardados</h2>
-                <span className="text-xs text-gray-500 font-medium">1 documento guardado</span>
+                <span className="text-xs text-gray-500 font-medium">0 documentos guardados</span>
               </div>
-              
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition">
-                <div className="flex items-center gap-6 w-full">
-                  <div className="w-28 h-36 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-inner flex-shrink-0">
-                    <FileText className="h-10 w-10 mb-2 text-blue-600" />
-                    <span>PDF</span>
-                  </div>
-                  <div className="space-y-3">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      Tesis
-                    </span>
-                    <h3 className="font-bold text-gray-900 text-lg leading-snug">
-                      Repositorio Web Institucional de Tesis y Sistematizaciones
-                    </h3>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto flex-shrink-0">
-                  <a href="/visor" className="flex-1 sm:flex-initial text-center text-xs bg-blue-700 hover:bg-blue-800 text-white font-semibold px-5 py-3 rounded-xl transition shadow-sm">
-                    Ver en Visor
-                  </a>
-                  <button 
-                    onClick={() => setIsSaved(!isSaved)}
-                    title={isSaved ? "Quitar de guardados" : "Guardar documento"}
-                    className="p-3 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition"
-                  >
-                    <Bookmark className={`h-4 w-4 ${isSaved ? "fill-blue-600" : ""}`} />
-                  </button>
-                </div>
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 shadow-sm text-center">
+                <Bookmark className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-sm">No tienes documentos guardados aún.</p>
+                <p className="text-gray-400 text-xs mt-1">Guarda un documento desde el repositorio para que aparezca aquí.</p>
               </div>
             </div>
           )}
@@ -180,37 +156,13 @@ export default function PerfilPage() {
             <div className="space-y-6 w-full">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Documentos que te gustan</h2>
-                <span className="text-xs text-gray-500 font-medium">1 documento con "Me gusta"</span>
+                <span className="text-xs text-gray-500 font-medium">0 documentos con 'Me gusta'</span>
               </div>
-              
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition">
-                <div className="flex items-center gap-6 w-full">
-                  <div className="w-28 h-36 bg-red-50 border border-red-200 text-red-700 rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-inner flex-shrink-0">
-                    <FileText className="h-10 w-10 mb-2 text-red-600" />
-                    <span>PDF</span>
-                  </div>
-                  <div className="space-y-3">
-                    <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      Sistematización
-                    </span>
-                    <h3 className="font-bold text-gray-900 text-lg leading-snug">
-                      Cisco CCNA 2 Module 6: EtherChannel y Redes
-                    </h3>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto flex-shrink-0">
-                  <a href="/visor" className="flex-1 sm:flex-initial text-center text-xs bg-blue-700 hover:bg-blue-800 text-white font-semibold px-5 py-3 rounded-xl transition shadow-sm">
-                    Ver en Visor
-                  </a>
-                  <button 
-                    onClick={() => setIsLiked(!isLiked)}
-                    title={isLiked ? "Quitar Me gusta" : "Dar Me gusta"}
-                    className="p-3 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition"
-                  >
-                    <Heart className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
-                  </button>
-                </div>
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 shadow-sm text-center">
+                <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-sm">No tienes documentos con 'Me gusta' aún.</p>
+                <p className="text-gray-400 text-xs mt-1">Dale 'Me gusta' a un documento desde el visor para que aparezca aquí.</p>
               </div>
             </div>
           )}
