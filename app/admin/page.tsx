@@ -1,15 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import SeccionUsuarios from './components/SeccionUsuarios';
 import SeccionDocumentos from './components/SeccionDocumentos';
 import SeccionTiposDoc from './components/SeccionTiposDoc';
 import Footer from '@/components/Footer';
+import { logout } from '@/lib/auth';
 
 type Tab = 'usuarios' | 'documentos' | 'tipos';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('usuarios');
+  const router = useRouter();
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'usuarios', label: 'Gestionar Usuarios', icon: 'fa-users' },
@@ -26,10 +29,10 @@ export default function AdminPage() {
               <i className="fa-solid fa-shield-halved"></i> Panel Admin | IUJO
             </div>
             <div className="flex items-center gap-4">
-              <a href="/" className="text-sm bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition">
+              <a href="/admin/repositorio" className="text-sm bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition">
                 Ver Repositorio
               </a>
-              <a href="/login" className="text-sm text-red-300 hover:text-white transition">
+              <a href="#" onClick={async (e) => { e.preventDefault(); await logout(); router.push('/login'); }} className="text-sm text-red-300 hover:text-white transition">
                 <i className="fa-solid fa-right-from-bracket"></i> Salir
               </a>
             </div>

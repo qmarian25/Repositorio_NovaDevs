@@ -59,14 +59,6 @@ export default function Page() {
     cargarDocumentos();
   }, []);
 
-  const toggleGuardado = (id: number) => {
-    setDocumentos((docs) =>
-      docs.map((doc) =>
-        doc.id_documento === id ? { ...doc, guardado: !doc.guardado } : doc
-      )
-    );
-  };
-
   return (
     <NavbarUser>
       <section className="space-y-3 sm:space-y-4 md:space-y-6 w-full pb-16 min-w-0">
@@ -88,13 +80,13 @@ export default function Page() {
             </div>
             <h3 className="text-lg font-bold text-gray-800">No hay documentos registrados</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
-              Aún no se han subido documentos al repositorio, o los filtros no coinciden.
+              Aún no se han subido documentos al repositorio.
             </p>
           </div>
         ) : (
           <div 
             id="listaResultados" 
-            className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
           >
             {documentos.map((doc) => (
               <div 
@@ -108,10 +100,9 @@ export default function Page() {
                 <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 min-w-0">
                   
                   <div className="relative min-w-0">
-                    <a href={`/visor?id=${doc.id_documento}`} className="block w-full h-24 xs:h-28 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
+                    <a href={`/visor?id=${doc.id_documento}`} className="block w-full h-24 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
                       <div className="w-full h-full rounded-sm sm:rounded-md md:rounded-lg overflow-hidden relative">
                         
-                        {/* URL DE LA PORTADA (IMAGEN RÁPIDA) */}
                         <PdfThumbnail urlPortada={doc.url_portada} titulo={doc.titulo} className="w-full h-full" />
                         
                         <span className="absolute top-0 left-0 bg-black text-white text-[7px] sm:text-[8px] md:text-[10px] font-black px-1 sm:px-1.5 md:px-2.5 py-0.5 rounded-tl-sm rounded-br-md tracking-wider sm:tracking-widest uppercase shadow-sm z-10">
@@ -119,14 +110,6 @@ export default function Page() {
                         </span>
                       </div>
                     </a>
-
-                    <button 
-                      onClick={(e) => { e.preventDefault(); toggleGuardado(doc.id_documento); }}
-                      title={doc.guardado ? "Quitar de guardados" : "Guardar documento"}
-                      className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 md:top-2.5 md:right-2.5 p-0.5 sm:p-1 md:p-1.5 rounded-full bg-white/90 hover:bg-white text-gray-700 shadow-sm transition z-10"
-                    >
-                      <Bookmark className={`h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 transition-colors ${doc.guardado ? 'fill-blue-700 text-blue-700' : 'text-gray-500 hover:text-blue-700'}`} />
-                    </button>
                   </div>
 
                   <div className="space-y-0.5 sm:space-y-1 md:space-y-1.5 min-w-0">
@@ -135,7 +118,7 @@ export default function Page() {
                     </span>
                     
                     <a href={`/visor?id=${doc.id_documento}`} className="block min-w-0">
-                      <h3 className="font-bold text-gray-900 text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
+                      <h3 className="font-bold text-gray-900 text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
                         {doc.titulo}
                       </h3>
                     </a>

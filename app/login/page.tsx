@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { login } from '@/lib/auth';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -8,44 +10,63 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [alertInfo, setAlertInfo] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Cargar FontAwesome dinámicamente si no está presente
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-    document.head.appendChild(link);
+    if (pathname !== '/login') return;
+    setCedula('');
+    setPassword('');
+    setLoading(false);
+    setAlertInfo(null);
+  }, [pathname]);
 
-    return () => {
-      link.remove();
-    };
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setAlertInfo(null);
 
-    // Simulación local de login (sin Supabase)
-    setTimeout(() => {
-      if (cedula.length < 6) {
-        setAlertInfo({
-          message: 'Por favor, ingresa una cédula válida.',
-          type: 'error',
-        });
-        setLoading(false);
+    if (!cedula || cedula.length < 6) {
+      setAlertInfo({
+        message: 'Por favor, ingresa una cédula válida.',
+        type: 'error',
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error, user } = await login(cedula, password);
+
+      if (error) {
+        setAlertInfo({ message: error, type: 'error' });
         return;
       }
 
-      setAlertInfo({
-        message: '¡Acceso concedido! Redirigiendo...',
-        type: 'success',
-      });
+      if (user) {
+        window.dispatchEvent(new CustomEvent('session-changed'));
 
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1200);
-    }, 600);
+        setAlertInfo({
+          message:
+            user.id_tipo_usuario === 2
+              ? '¡Acceso concedido como administrador! Redirigiendo...'
+              : '¡Acceso concedido! Redirigiendo...',
+          type: 'success',
+        });
+
+        setTimeout(() => {
+          if (user.id_tipo_usuario === 2) {
+            router.push('/admin');
+          } else {
+            router.push('/');
+          }
+        }, 1000);
+      }
+    } catch (err: any) {
+      setAlertInfo({ message: err.message || 'Error inesperado', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -130,6 +151,16 @@ export default function LoginPage() {
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => router.push('/invitado')}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg shadow-md transition duration-200 border border-gray-300"
+            >
+              Ingresar como invitado
+            </button>
+          </div>
 
           <div className="text-right mt-2">
             <button

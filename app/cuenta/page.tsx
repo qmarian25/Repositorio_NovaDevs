@@ -12,7 +12,7 @@ export default function PerfilPage() {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <NavbarUser>
+    <NavbarUser mostrarTarjetas>
       <div className="w-full flex flex-col space-y-8 pb-16 overflow-x-hidden">
         
         <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] bg-gradient-to-r from-slate-100 via-white to-slate-100 border-b border-gray-200/90 shadow-xs py-7 px-6 sm:px-12 -mt-6 mb-8">

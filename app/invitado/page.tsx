@@ -84,7 +84,7 @@ export default function InvitadoPage() {
         ) : (
           <div 
             id="listaResultadosInvitado" 
-            className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
           >
             {documentos.map((doc) => (
               <div 
@@ -98,7 +98,7 @@ export default function InvitadoPage() {
                 <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 min-w-0">
                   
                   <div className="relative min-w-0">
-                    <a href={`/invitado/visor?id=${doc.id_documento}`} className="block w-full h-24 xs:h-28 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
+                    <a href={`/invitado/visor?id=${doc.id_documento}`} className="block w-full h-24 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
                       <div className="w-full h-full rounded-sm sm:rounded-md md:rounded-lg overflow-hidden relative">
                         
                         <PdfThumbnail urlPortada={doc.url_portada} titulo={doc.titulo} className="w-full h-full" />
@@ -116,7 +116,7 @@ export default function InvitadoPage() {
                     </span>
                     
                     <a href={`/invitado/visor?id=${doc.id_documento}`} className="block min-w-0">
-                      <h3 className="font-bold text-gray-900 text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
+                      <h3 className="font-bold text-gray-900 text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
                         {doc.titulo}
                       </h3>
                     </a>

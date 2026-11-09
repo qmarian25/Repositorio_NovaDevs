@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import NavbarUser from '@/components/NavbarUser';
+import NavbarUsuarioSimple from '@/components/NavbarUsuarioSimple';
 import { supabase } from '@/lib/supabase';
 import { File, Heart, Bookmark, Download, ZoomOut, ZoomIn } from 'lucide-react';
 
@@ -82,17 +82,17 @@ function VisorContent() {
 
   if (cargando) {
     return (
-      <NavbarUser>
+      <NavbarUsuarioSimple>
         <div className="flex items-center justify-center min-h-[60vh] text-gray-500">
           Cargando visor...
         </div>
-      </NavbarUser>
+      </NavbarUsuarioSimple>
     );
   }
 
   if (error || !documento) {
     return (
-      <NavbarUser>
+      <NavbarUsuarioSimple>
         <main className="w-full flex items-center justify-center min-h-[60vh]">
           <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center">
             <File className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -106,12 +106,12 @@ function VisorContent() {
             </a>
           </div>
         </main>
-      </NavbarUser>
+      </NavbarUsuarioSimple>
     );
   }
 
   return (
-    <NavbarUser>
+    <NavbarUsuarioSimple>
       <main className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6 h-fit">
           <div>
@@ -242,7 +242,7 @@ function VisorContent() {
           `,
         }}
       />
-    </NavbarUser>
+    </NavbarUsuarioSimple>
   );
 }
 

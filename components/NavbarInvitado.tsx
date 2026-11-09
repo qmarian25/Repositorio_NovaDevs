@@ -1,9 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, LogOut, Grid } from 'lucide-react';
 
 interface NavbarInvitadoProps {
   children?: ReactNode;
@@ -11,6 +11,7 @@ interface NavbarInvitadoProps {
 
 export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const esVistaSimple = pathname === '/invitado/visor' || pathname === '/cuenta';
 
   return (
@@ -38,8 +39,14 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
               />
             </div>
 
-            {/* Derecha: Solo etiqueta de Invitado (sin opciones de usuario) */}
-            <div className="relative flex-shrink-0">
+            {/* Derecha: Botón Volver, Tarjetas y etiqueta de Invitado */}
+            <div className="relative flex-shrink-0 flex items-center gap-2">
+              <button onClick={() => router.push('/login')} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
+                <LogOut className="h-4 w-4" /> Volver
+              </button>
+              <button onClick={() => router.push('/invitado')} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
+                <Grid className="h-4 w-4" /> Tarjetas
+              </button>
               <button className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3.5 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
                 <span className="text-blue-100 font-medium">Invitado</span>
               </button>
@@ -50,7 +57,7 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
         <div className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col">
           
           {/* Barra de búsqueda móvil */}
-          <div className="flex sm:hidden gap-3 mb-4">
+          <div className="flex sm:hidden gap-3 mb-4 px-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
               <input 
@@ -61,7 +68,7 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
               />
             </div>
             {!esVistaSimple && (
-              <button onClick={() => (window as any).toggleDrawerInvitado(true)} className="flex items-center gap-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0">
+              <button onClick={() => (window as any).toggleDrawerInvitado(true)} className="flex items-center gap-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0 min-w-[auto]">
                 <Filter className="h-5 w-5" /> Filtros
               </button>
             )}
@@ -112,7 +119,7 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
             </div>
           </div>
         </div>
-        
+         {/* INTEGRACIÓN DEL FOOTER DENTRO DE NAVBAR */}
         <Footer/>
 
         {/* FILTROS PARA MÓVIL */}
@@ -145,7 +152,6 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
                   <button onClick={() => { (window as any).seleccionarFiltroInvitado('tipo', 'Sistematización'); (window as any).toggleDrawerInvitado(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Sistematización</button>
                 </div>
               </div>
-
             </div>
 
             <div className="pt-4 border-t">
