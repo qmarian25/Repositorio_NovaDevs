@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { Search, Filter, X, LogOut, Grid } from 'lucide-react';
@@ -13,6 +13,111 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
   const pathname = usePathname();
   const router = useRouter();
   const esVistaSimple = pathname === '/invitado/visor' || pathname === '/cuenta';
+
+  useEffect(() => {
+    (window as any).toggleDrawerInvitado = (abrir: boolean) => {
+      const drawer = document.getElementById('drawerMovilInvitado');
+      if (!drawer) return;
+      if (abrir) {
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+      }
+    };
+
+    let filtrosSeleccionadosInvitado: Record<string, string> = {};
+
+    (window as any).seleccionarFiltroInvitado = (categoria: string, valor: string) => {
+      filtrosSeleccionadosInvitado[categoria] = valor;
+      actualizarChipsInvitado();
+      (window as any).filtrarDocumentosInvitado();
+    };
+
+    (window as any).removerFiltroInvitado = (categoria: string) => {
+      delete filtrosSeleccionadosInvitado[categoria];
+      actualizarChipsInvitado();
+      (window as any).filtrarDocumentosInvitado();
+    };
+
+    (window as any).limpiarFiltrosInvitado = () => {
+      filtrosSeleccionadosInvitado = {};
+      const input = document.getElementById('inputBusquedaInvitado');
+      if (input) (input as HTMLInputElement).value = '';
+      actualizarChipsInvitado();
+      (window as any).filtrarDocumentosInvitado();
+    };
+
+    const actualizarChipsInvitado = () => {
+      const contenedor = document.getElementById('contenedorChipsInvitado');
+      const lista = document.getElementById('listaChipsInvitado');
+      if (!contenedor || !lista) return;
+      lista.innerHTML = '';
+
+      const keys = Object.keys(filtrosSeleccionadosInvitado);
+      if (keys.length > 0) {
+        contenedor.classList.remove('hidden');
+        contenedor.classList.add('flex');
+        keys.forEach((cat) => {
+          lista.innerHTML += `
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                  ${filtrosSeleccionadosInvitado[cat]} 
+                  <button onclick="(window as any).removerFiltroInvitado('${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
+              </span>
+          `;
+        });
+      } else {
+        contenedor.classList.remove('flex');
+        contenedor.classList.add('hidden');
+      }
+    };
+
+    (window as any).filtrarDocumentosInvitado = () => {
+      const input = document.getElementById('inputBusquedaInvitado');
+      const textoBusqueda = input ? (input as HTMLInputElement).value.toLowerCase() : '';
+      const tarjetas = document.querySelectorAll('.documento-card');
+      const contenedorContador = document.getElementById('contenedorContadorInvitado');
+      const contador = document.getElementById('contadorResultadosInvitado');
+
+      const tieneFiltrosActivos = Object.keys(filtrosSeleccionadosInvitado).length > 0 || textoBusqueda.length > 0;
+
+      if (!tieneFiltrosActivos) {
+        if (contenedorContador) {
+          contenedorContador.classList.remove('flex');
+          contenedorContador.classList.add('hidden');
+        }
+        tarjetas.forEach((card) => {
+          (card as HTMLElement).style.display = 'flex';
+        });
+        return;
+      }
+
+      if (contenedorContador) {
+        contenedorContador.classList.remove('hidden');
+        contenedorContador.classList.add('flex');
+      }
+
+      let visibles = 0;
+
+      tarjetas.forEach((card) => {
+        const carreraCard = card.getAttribute('data-carrera');
+        const tipoCard = card.getAttribute('data-tipo');
+        const contenidoTexto = card.getAttribute('data-texto');
+
+        let coincideCarrera = !filtrosSeleccionadosInvitado['carrera'] || filtrosSeleccionadosInvitado['carrera'] === carreraCard;
+        let coincideTipo = !filtrosSeleccionadosInvitado['tipo'] || filtrosSeleccionadosInvitado['tipo'] === tipoCard;
+        let coincideTexto = !textoBusqueda || contenidoTexto?.includes(textoBusqueda);
+
+        if (coincideCarrera && coincideTipo && coincideTexto) {
+          (card as HTMLElement).style.display = 'flex';
+          visibles++;
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+
+      if (contador) contador.innerText = `Resultados encontrados (${visibles})`;
+    };
+  }, []);
 
   return (
     <>
@@ -161,113 +266,6 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
             </div>
           </div>
         </div>
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function toggleDrawerInvitado(abrir) {
-                  const drawer = document.getElementById('drawerMovilInvitado');
-                  if (!drawer) return;
-                  if (abrir) {
-                      drawer.classList.remove('hidden');
-                  } else {
-                      drawer.classList.add('hidden');
-                  }
-              }
-
-              let filtrosSeleccionadosInvitado = {};
-
-              function seleccionarFiltroInvitado(categoria, valor) {
-                  filtrosSeleccionadosInvitado[categoria] = valor;
-                  actualizarChipsInvitado();
-                  filtrarDocumentosInvitado();
-              }
-
-              function removerFiltroInvitado(categoria) {
-                  delete filtrosSeleccionadosInvitado[categoria];
-                  actualizarChipsInvitado();
-                  filtrarDocumentosInvitado();
-              }
-
-              function limpiarFiltrosInvitado() {
-                  filtrosSeleccionadosInvitado = {};
-                  const input = document.getElementById('inputBusquedaInvitado');
-                  if (input) input.value = '';
-                  actualizarChipsInvitado();
-                  filtrarDocumentosInvitado();
-              }
-
-              function actualizarChipsInvitado() {
-                  const contenedor = document.getElementById('contenedorChipsInvitado');
-                  const lista = document.getElementById('listaChipsInvitado');
-                  if (!contenedor || !lista) return;
-                  lista.innerHTML = '';
-
-                  const keys = Object.keys(filtrosSeleccionadosInvitado);
-                  if (keys.length > 0) {
-                      contenedor.classList.remove('hidden');
-                      contenedor.classList.add('flex');
-                      keys.forEach(cat => {
-                          lista.innerHTML += \`
-                              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                  \${filtrosSeleccionadosInvitado[cat]} 
-                                  <button onclick="removerFiltroInvitado('\${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
-                              </span>
-                          \`;
-                      });
-                  } else {
-                      contenedor.classList.remove('flex');
-                      contenedor.classList.add('hidden');
-                  }
-              }
-
-              function filtrarDocumentosInvitado() {
-                  const input = document.getElementById('inputBusquedaInvitado');
-                  const textoBusqueda = input ? input.value.toLowerCase() : '';
-                  const tarjetas = document.querySelectorAll('.documento-card');
-                  const contenedorContador = document.getElementById('contenedorContadorInvitado');
-                  const contador = document.getElementById('contadorResultadosInvitado');
-                  
-                  const tieneFiltrosActivos = Object.keys(filtrosSeleccionadosInvitado).length > 0 || textoBusqueda.length > 0;
-
-                  if (!tieneFiltrosActivos) {
-                      if (contenedorContador) {
-                          contenedorContador.classList.remove('flex');
-                          contenedorContador.classList.add('hidden');
-                      }
-                      tarjetas.forEach(card => card.style.display = 'flex');
-                      return;
-                  }
-
-                  if (contenedorContador) {
-                      contenedorContador.classList.remove('hidden');
-                      contenedorContador.classList.add('flex');
-                  }
-
-                  let visibles = 0;
-
-                  tarjetas.forEach(card => {
-                      const carreraCard = card.getAttribute('data-carrera');
-                      const tipoCard = card.getAttribute('data-tipo');
-                      const contenidoTexto = card.getAttribute('data-texto');
-
-                      let coincideCarrera = !filtrosSeleccionadosInvitado['carrera'] || filtrosSeleccionadosInvitado['carrera'] === carreraCard;
-                      let coincideTipo = !filtrosSeleccionadosInvitado['tipo'] || filtrosSeleccionadosInvitado['tipo'] === tipoCard;
-                      let coincideTexto = !textoBusqueda || contenidoTexto.includes(textoBusqueda);
-
-                      if (coincideCarrera && coincideTipo && coincideTexto) {
-                          card.style.display = 'flex';
-                          visibles++;
-                      } else {
-                          card.style.display = 'none';
-                      }
-                  });
-
-                  if (contador) contador.innerText = \`Resultados encontrados (\${visibles})\`;
-              }
-            `,
-          }}
-        />
       </div>
     </>
   );

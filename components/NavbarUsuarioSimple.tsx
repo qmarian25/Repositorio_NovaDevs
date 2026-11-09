@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
-import { logout, getSession } from '@/lib/auth';
+import { logout } from '@/lib/auth';
+import { useAuth } from '@/lib/auth-context';
 import { ChevronDown, Settings, LogOut, UserCircle, Grid } from 'lucide-react';
 
 interface NavbarUsuarioSimpleProps {
@@ -13,29 +14,8 @@ interface NavbarUsuarioSimpleProps {
 export default function NavbarUsuarioSimple({ children }: NavbarUsuarioSimpleProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null);
+  const { usuario } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const cargarSesion = async () => {
-      const sesion = await getSession();
-      if (sesion) {
-        setNombreUsuario(`${sesion.nombre} ${sesion.apellido}`);
-      } else {
-        setNombreUsuario(null);
-      }
-    };
-    cargarSesion();
-
-    const handleSesionCambiada = () => {
-      cargarSesion();
-    };
-
-    window.addEventListener('session-changed', handleSesionCambiada);
-    return () => {
-      window.removeEventListener('session-changed', handleSesionCambiada);
-    };
-  }, [pathname]);
 
   const cerrarSesion = async () => {
     await logout();
@@ -67,10 +47,10 @@ export default function NavbarUsuarioSimple({ children }: NavbarUsuarioSimplePro
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition focus:outline-none"
               >
-                {nombreUsuario ? (
+                {usuario ? (
                   <>
                     <UserCircle className="h-4 w-4 mr-1" />
-                    <span>{nombreUsuario}</span>
+                    <span>{`${usuario.nombre} ${usuario.apellido}`}</span>
                     <ChevronDown className="h-4 w-4" />
                   </>
                 ) : (

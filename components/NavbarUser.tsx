@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
-import { logout, getSession } from '@/lib/auth';
+import { logout } from '@/lib/auth';
+import { useAuth } from '@/lib/auth-context';
 import { Search, UserCircle, ChevronDown, Settings, LogOut, Filter, X, Grid } from 'lucide-react';
 
 interface NavbarUserProps {
@@ -15,19 +16,128 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
   const pathname = usePathname();
   const router = useRouter();
   const esVistaSimple = pathname === '/visor' || pathname === '/cuenta';
-  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null);
+  const { usuario } = useAuth();
 
   useEffect(() => {
-    const cargarSesion = async () => {
-      const sesion = await getSession();
-      if (sesion) {
-        setNombreUsuario(`${sesion.nombre} ${sesion.apellido}`);
+    (window as any).toggleMenuPerfil = (e: MouseEvent) => {
+      e.stopPropagation();
+      const menu = document.getElementById('menuPerfil');
+      if (!menu) return;
+      menu.classList.toggle('hidden');
+      const cerrarFuera = (ev: MouseEvent) => {
+        if (!menu.contains(ev.target as Node) && (ev.target as Element).closest('button[onclick*="toggleMenuPerfil"]') !== menu) {
+          menu.classList.add('hidden');
+          document.removeEventListener('click', cerrarFuera);
+        }
+      };
+      document.addEventListener('click', cerrarFuera);
+    };
+
+    (window as any).toggleDrawer = (abrir: boolean) => {
+      const drawer = document.getElementById('drawerMovil');
+      if (!drawer) return;
+      if (abrir) {
+        drawer.classList.remove('hidden');
       } else {
-        setNombreUsuario(null);
+        drawer.classList.add('hidden');
       }
     };
-    cargarSesion();
-  }, [pathname]);
+
+    let filtrosSeleccionados: Record<string, string> = {};
+
+    (window as any).seleccionarFiltro = (categoria: string, valor: string) => {
+      filtrosSeleccionados[categoria] = valor;
+      actualizarChips();
+      (window as any).filtrarDocumentos();
+    };
+
+    (window as any).removerFiltro = (categoria: string) => {
+      delete filtrosSeleccionados[categoria];
+      actualizarChips();
+      (window as any).filtrarDocumentos();
+    };
+
+    (window as any).limpiarFiltros = () => {
+      filtrosSeleccionados = {};
+      const input = document.getElementById('inputBusqueda');
+      const inputMovil = document.getElementById('inputBusquedaMovil');
+      if (input) (input as HTMLInputElement).value = '';
+      if (inputMovil) (inputMovil as HTMLInputElement).value = '';
+      actualizarChips();
+      (window as any).filtrarDocumentos();
+    };
+
+    const actualizarChips = () => {
+      const contenedor = document.getElementById('contenedorChips');
+      const lista = document.getElementById('listaChips');
+      if (!contenedor || !lista) return;
+      lista.innerHTML = '';
+
+      const keys = Object.keys(filtrosSeleccionados);
+      if (keys.length > 0) {
+        contenedor.classList.remove('hidden');
+        contenedor.classList.add('flex');
+        keys.forEach((cat) => {
+          lista.innerHTML += `
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                  ${filtrosSeleccionados[cat]} 
+                  <button onclick="(window as any).removerFiltro('${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
+              </span>
+          `;
+        });
+      } else {
+        contenedor.classList.remove('flex');
+        contenedor.classList.add('hidden');
+      }
+    };
+
+    (window as any).filtrarDocumentos = () => {
+      const input = document.getElementById('inputBusqueda');
+      const textoBusqueda = input ? (input as HTMLInputElement).value.toLowerCase() : '';
+      const tarjetas = document.querySelectorAll('.documento-card');
+      const contenedorContador = document.getElementById('contenedorContador');
+      const contador = document.getElementById('contadorResultados');
+
+      const tieneFiltrosActivos = Object.keys(filtrosSeleccionados).length > 0 || textoBusqueda.length > 0;
+
+      if (!tieneFiltrosActivos) {
+        if (contenedorContador) {
+          contenedorContador.classList.remove('flex');
+          contenedorContador.classList.add('hidden');
+        }
+        tarjetas.forEach((card) => {
+          (card as HTMLElement).style.display = 'flex';
+        });
+        return;
+      }
+
+      if (contenedorContador) {
+        contenedorContador.classList.remove('hidden');
+        contenedorContador.classList.add('flex');
+      }
+
+      let visibles = 0;
+
+      tarjetas.forEach((card) => {
+        const carreraCard = card.getAttribute('data-carrera');
+        const tipoCard = card.getAttribute('data-tipo');
+        const contenidoTexto = card.getAttribute('data-texto');
+
+        let coincideCarrera = !filtrosSeleccionados['carrera'] || filtrosSeleccionados['carrera'] === carreraCard;
+        let coincideTipo = !filtrosSeleccionados['tipo'] || filtrosSeleccionados['tipo'] === tipoCard;
+        let coincideTexto = !textoBusqueda || contenidoTexto?.includes(textoBusqueda);
+
+        if (coincideCarrera && coincideTipo && coincideTexto) {
+          (card as HTMLElement).style.display = 'flex';
+          visibles++;
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+
+      if (contador) contador.innerText = `Resultados encontrados (${visibles})`;
+    };
+  }, []);
 
   return (
     <>
@@ -61,8 +171,8 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
               )}
               <button onClick={(e) => (window as any).toggleMenuPerfil(e)} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3.5 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
                 <UserCircle className="h-5 w-5" />
-                {nombreUsuario ? (
-                  <span>{nombreUsuario}</span>
+                {usuario ? (
+                  <span>{`${usuario.nombre} ${usuario.apellido}`}</span>
                 ) : (
                   <span className="text-gray-300">Usuario</span>
                 )}
@@ -194,127 +304,6 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
             </div>
           </div>
         </div>
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function toggleMenuPerfil(e) {
-                  e.stopPropagation();
-                  const menu = document.getElementById('menuPerfil');
-                  menu.classList.toggle('hidden');
-                  document.addEventListener('click', function cerrarFuera(e) {
-                      if (!menu.contains(e.target) && e.target.closest('button[onclick*="toggleMenuPerfil"]') !== menu) {
-                          menu.classList.add('hidden');
-                          document.removeEventListener('click', cerrarFuera);
-                      }
-                  });
-              }
-
-              let filtrosSeleccionados = {};
-
-              function toggleDrawer(abrir) {
-                  const drawer = document.getElementById('drawerMovil');
-                  if (!drawer) return;
-                  if (abrir) {
-                      drawer.classList.remove('hidden');
-                  } else {
-                      drawer.classList.add('hidden');
-                  }
-              }
-
-              function seleccionarFiltro(categoria, valor) {
-                  filtrosSeleccionados[categoria] = valor;
-                  actualizarChips();
-                  filtrarDocumentos();
-              }
-
-              function removerFiltro(categoria) {
-                  delete filtrosSeleccionados[categoria];
-                  actualizarChips();
-                  filtrarDocumentos();
-              }
-
-              function limpiarFiltros() {
-                  filtrosSeleccionados = {};
-                  const input = document.getElementById('inputBusqueda');
-                  const inputMovil = document.getElementById('inputBusquedaMovil');
-                  if (input) input.value = '';
-                  if (inputMovil) inputMovil.value = '';
-                  actualizarChips();
-                  filtrarDocumentos();
-              }
-
-              function actualizarChips() {
-                  const contenedor = document.getElementById('contenedorChips');
-                  const lista = document.getElementById('listaChips');
-                  if (!contenedor || !lista) return;
-                  lista.innerHTML = '';
-
-                  const keys = Object.keys(filtrosSeleccionados);
-                  if (keys.length > 0) {
-                      contenedor.classList.remove('hidden');
-                      contenedor.classList.add('flex');
-                      keys.forEach(cat => {
-                          lista.innerHTML += \`
-                              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                  \${filtrosSeleccionados[cat]} 
-                                  <button onclick="removerFiltro('\${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
-                              </span>
-                          \`;
-                      });
-                  } else {
-                      contenedor.classList.remove('flex');
-                      contenedor.classList.add('hidden');
-                  }
-              }
-
-              function filtrarDocumentos() {
-                  const input = document.getElementById('inputBusqueda');
-                  const textoBusqueda = input ? input.value.toLowerCase() : '';
-                  const tarjetas = document.querySelectorAll('.documento-card');
-                  const contenedorContador = document.getElementById('contenedorContador');
-                  const contador = document.getElementById('contadorResultados');
-                  
-                  const tieneFiltrosActivos = Object.keys(filtrosSeleccionados).length > 0 || textoBusqueda.length > 0;
-
-                  if (!tieneFiltrosActivos) {
-                      if (contenedorContador) {
-                          contenedorContador.classList.remove('flex');
-                          contenedorContador.classList.add('hidden');
-                      }
-                      tarjetas.forEach(card => card.style.display = 'flex');
-                      return;
-                  }
-
-                  if (contenedorContador) {
-                      contenedorContador.classList.remove('hidden');
-                      contenedorContador.classList.add('flex');
-                  }
-
-                  let visibles = 0;
-
-                  tarjetas.forEach(card => {
-                      const carreraCard = card.getAttribute('data-carrera');
-                      const tipoCard = card.getAttribute('data-tipo');
-                      const contenidoTexto = card.getAttribute('data-texto');
-
-                      let coincideCarrera = !filtrosSeleccionados['carrera'] || filtrosSeleccionados['carrera'] === carreraCard;
-                      let coincideTipo = !filtrosSeleccionados['tipo'] || filtrosSeleccionados['tipo'] === tipoCard;
-                      let coincideTexto = !textoBusqueda || contenidoTexto.includes(textoBusqueda);
-
-                      if (coincideCarrera && coincideTipo && coincideTexto) {
-                          card.style.display = 'flex';
-                          visibles++;
-                      } else {
-                          card.style.display = 'none';
-                      }
-                  });
-
-                  if (contador) contador.innerText = \`Resultados encontrados (\${visibles})\`;
-              }
-            `,
-          }}
-        />
       </div>
     </>
   );

@@ -60,6 +60,7 @@ export default function LoginPage() {
           } else {
             router.push('/');
           }
+          router.refresh();
         }, 1000);
       }
     } catch (err: any) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { Search, Filter, X, LogOut } from 'lucide-react';
@@ -14,6 +14,111 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
   const pathname = usePathname();
   const router = useRouter();
   const esVistaSimple = pathname === '/cuenta';
+
+  useEffect(() => {
+    (window as any).toggleDrawerAdmin = (abrir: boolean) => {
+      const drawer = document.getElementById('drawerMovilAdmin');
+      if (!drawer) return;
+      if (abrir) {
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+      }
+    };
+
+    let filtrosSeleccionadosAdmin: Record<string, string> = {};
+
+    (window as any).seleccionarFiltroAdmin = (categoria: string, valor: string) => {
+      filtrosSeleccionadosAdmin[categoria] = valor;
+      actualizarChipsAdmin();
+      (window as any).filtrarDocumentosAdmin();
+    };
+
+    (window as any).removerFiltroAdmin = (categoria: string) => {
+      delete filtrosSeleccionadosAdmin[categoria];
+      actualizarChipsAdmin();
+      (window as any).filtrarDocumentosAdmin();
+    };
+
+    (window as any).limpiarFiltrosAdmin = () => {
+      filtrosSeleccionadosAdmin = {};
+      const input = document.getElementById('inputBusquedaAdmin');
+      if (input) (input as HTMLInputElement).value = '';
+      actualizarChipsAdmin();
+      (window as any).filtrarDocumentosAdmin();
+    };
+
+    const actualizarChipsAdmin = () => {
+      const contenedor = document.getElementById('contenedorChipsAdmin');
+      const lista = document.getElementById('listaChipsAdmin');
+      if (!contenedor || !lista) return;
+      lista.innerHTML = '';
+
+      const keys = Object.keys(filtrosSeleccionadosAdmin);
+      if (keys.length > 0) {
+        contenedor.classList.remove('hidden');
+        contenedor.classList.add('flex');
+        keys.forEach((cat) => {
+          lista.innerHTML += `
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                  ${filtrosSeleccionadosAdmin[cat]} 
+                  <button onclick="(window as any).removerFiltroAdmin('${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
+              </span>
+          `;
+        });
+      } else {
+        contenedor.classList.remove('flex');
+        contenedor.classList.add('hidden');
+      }
+    };
+
+    (window as any).filtrarDocumentosAdmin = () => {
+      const input = document.getElementById('inputBusquedaAdmin');
+      const textoBusqueda = input ? (input as HTMLInputElement).value.toLowerCase() : '';
+      const tarjetas = document.querySelectorAll('.documento-card');
+      const contenedorContador = document.getElementById('contenedorContadorAdmin');
+      const contador = document.getElementById('contadorResultadosAdmin');
+
+      const tieneFiltrosActivos = Object.keys(filtrosSeleccionadosAdmin).length > 0 || textoBusqueda.length > 0;
+
+      if (!tieneFiltrosActivos) {
+        if (contenedorContador) {
+          contenedorContador.classList.remove('flex');
+          contenedorContador.classList.add('hidden');
+        }
+        tarjetas.forEach((card) => {
+          (card as HTMLElement).style.display = 'flex';
+        });
+        return;
+      }
+
+      if (contenedorContador) {
+        contenedorContador.classList.remove('hidden');
+        contenedorContador.classList.add('flex');
+      }
+
+      let visibles = 0;
+
+      tarjetas.forEach((card) => {
+        const carreraCard = card.getAttribute('data-carrera');
+        const tipoCard = card.getAttribute('data-tipo');
+        const contenidoTexto = card.getAttribute('data-texto');
+
+        let coincideCarrera = !filtrosSeleccionadosAdmin['carrera'] || filtrosSeleccionadosAdmin['carrera'] === carreraCard;
+        let coincideTipo = !filtrosSeleccionadosAdmin['tipo'] || filtrosSeleccionadosAdmin['tipo'] === tipoCard;
+        let coincideTexto = !textoBusqueda || contenidoTexto?.includes(textoBusqueda);
+
+        if (coincideCarrera && coincideTipo && coincideTexto) {
+          (card as HTMLElement).style.display = 'flex';
+          visibles++;
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+
+      if (contador) contador.innerText = `Resultados encontrados (${visibles})`;
+    };
+  }, []);
 
   return (
     <>
@@ -159,113 +264,6 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
             </div>
           </div>
         </div>
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function toggleDrawerAdmin(abrir) {
-                  const drawer = document.getElementById('drawerMovilAdmin');
-                  if (!drawer) return;
-                  if (abrir) {
-                      drawer.classList.remove('hidden');
-                  } else {
-                      drawer.classList.add('hidden');
-                  }
-              }
-
-              let filtrosSeleccionadosAdmin = {};
-
-              function seleccionarFiltroAdmin(categoria, valor) {
-                  filtrosSeleccionadosAdmin[categoria] = valor;
-                  actualizarChipsAdmin();
-                  filtrarDocumentosAdmin();
-              }
-
-              function removerFiltroAdmin(categoria) {
-                  delete filtrosSeleccionadosAdmin[categoria];
-                  actualizarChipsAdmin();
-                  filtrarDocumentosAdmin();
-              }
-
-              function limpiarFiltrosAdmin() {
-                  filtrosSeleccionadosAdmin = {};
-                  const input = document.getElementById('inputBusquedaAdmin');
-                  if (input) input.value = '';
-                  actualizarChipsAdmin();
-                  filtrarDocumentosAdmin();
-              }
-
-              function actualizarChipsAdmin() {
-                  const contenedor = document.getElementById('contenedorChipsAdmin');
-                  const lista = document.getElementById('listaChipsAdmin');
-                  if (!contenedor || !lista) return;
-                  lista.innerHTML = '';
-
-                  const keys = Object.keys(filtrosSeleccionadosAdmin);
-                  if (keys.length > 0) {
-                      contenedor.classList.remove('hidden');
-                      contenedor.classList.add('flex');
-                      keys.forEach(cat => {
-                          lista.innerHTML += \`
-                              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                  \${filtrosSeleccionadosAdmin[cat]} 
-                                  <button onclick="removerFiltroAdmin('\${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
-                              </span>
-                          \`;
-                      });
-                  } else {
-                      contenedor.classList.remove('flex');
-                      contenedor.classList.add('hidden');
-                  }
-              }
-
-              function filtrarDocumentosAdmin() {
-                  const input = document.getElementById('inputBusquedaAdmin');
-                  const textoBusqueda = input ? input.value.toLowerCase() : '';
-                  const tarjetas = document.querySelectorAll('.documento-card');
-                  const contenedorContador = document.getElementById('contenedorContadorAdmin');
-                  const contador = document.getElementById('contadorResultadosAdmin');
-                  
-                  const tieneFiltrosActivos = Object.keys(filtrosSeleccionadosAdmin).length > 0 || textoBusqueda.length > 0;
-
-                  if (!tieneFiltrosActivos) {
-                      if (contenedorContador) {
-                          contenedorContador.classList.remove('flex');
-                          contenedorContador.classList.add('hidden');
-                      }
-                      tarjetas.forEach(card => card.style.display = 'flex');
-                      return;
-                  }
-
-                  if (contenedorContador) {
-                      contenedorContador.classList.remove('hidden');
-                      contenedorContador.classList.add('flex');
-                  }
-
-                  let visibles = 0;
-
-                  tarjetas.forEach(card => {
-                      const carreraCard = card.getAttribute('data-carrera');
-                      const tipoCard = card.getAttribute('data-tipo');
-                      const contenidoTexto = card.getAttribute('data-texto');
-
-                      let coincideCarrera = !filtrosSeleccionadosAdmin['carrera'] || filtrosSeleccionadosAdmin['carrera'] === carreraCard;
-                      let coincideTipo = !filtrosSeleccionadosAdmin['tipo'] || filtrosSeleccionadosAdmin['tipo'] === tipoCard;
-                      let coincideTexto = !textoBusqueda || contenidoTexto.includes(textoBusqueda);
-
-                      if (coincideCarrera && coincideTipo && coincideTexto) {
-                          card.style.display = 'flex';
-                          visibles++;
-                      } else {
-                          card.style.display = 'none';
-                      }
-                  });
-
-                  if (contador) contador.innerText = \`Resultados encontrados (\${visibles})\`;
-              }
-            `,
-          }}
-        />
       </div>
     </>
   );
