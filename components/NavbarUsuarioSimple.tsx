@@ -32,7 +32,7 @@ export default function NavbarUsuarioSimple({ children }: NavbarUsuarioSimplePro
             {/* Izquierda: Título / Logo */}
             <div className="font-bold text-lg tracking-wide flex-shrink-0">
               <a href="/" className="text-white hover:text-blue-200 transition">
-                Repositorio IUJO | Usuario
+                Repositorio IUJO | NovaDevs
               </a>
             </div>
 

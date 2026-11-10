@@ -1,7 +1,7 @@
+// lib/auth-context.tsx
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getSession } from '@/lib/auth';
 
 interface AuthContextType {
   usuario: any | null;
@@ -16,8 +16,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const cargarSesion = async () => {
     try {
-      const sesion = await getSession();
-      setUsuario(sesion);
+      // ✅ Consultamos a la API en lugar de usar getSession() directamente en el cliente
+      const res = await fetch('/api/auth');
+      const data = await res.json();
+      setUsuario(data.user);
     } catch {
       setUsuario(null);
     }
@@ -25,23 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     cargarSesion();
-
-    const handleSesionCambiada = () => {
-      cargarSesion();
-    };
-
+    const handleSesionCambiada = () => cargarSesion();
     window.addEventListener('session-changed', handleSesionCambiada);
-    return () => {
-      window.removeEventListener('session-changed', handleSesionCambiada);
-    };
+    return () => window.removeEventListener('session-changed', handleSesionCambiada);
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      usuario,
-      isAuthenticated: !!usuario,
-      refrescarSesion: cargarSesion,
-    }}>
+    <AuthContext.Provider value={{ usuario, isAuthenticated: !!usuario, refrescarSesion: cargarSesion }}>
       {children}
     </AuthContext.Provider>
   );
@@ -49,8 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider');
-  }
+  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
   return ctx;
 };
