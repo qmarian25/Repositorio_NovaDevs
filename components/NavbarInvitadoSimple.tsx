@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
-import { Grid, LogOut } from 'lucide-react';
+import { Search, Grid, LogOut } from 'lucide-react';
 
 interface NavbarInvitadoSimpleProps {
   children?: ReactNode;
@@ -11,6 +11,13 @@ interface NavbarInvitadoSimpleProps {
 
 export default function NavbarInvitadoSimple({ children }: NavbarInvitadoSimpleProps) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleBuscar = () => {
+    if (searchQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <>
@@ -23,6 +30,22 @@ export default function NavbarInvitadoSimple({ children }: NavbarInvitadoSimpleP
               <a href="/invitado" className="text-white hover:text-blue-200 transition">
                 Repositorio IUJO | Invitado
               </a>
+            </div>
+
+            {/* Centro: Barra de Búsqueda */}
+            <div className="flex-1 max-w-xl relative hidden sm:block">
+              <Search
+                className="absolute left-3 top-3 h-4 w-4 text-gray-400 cursor-pointer hover:text-blue-500 transition"
+                onClick={handleBuscar}
+              />
+              <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                  placeholder="Buscar documentos..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              />
             </div>
 
             {/* Derecha: Botón volver, volver al repositorio y etiqueta de Invitado */}

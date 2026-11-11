@@ -6,7 +6,7 @@ import NavbarUser from '@/components/NavbarUser';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import PdfThumbnail from '../admin/modals/PdfThumbnail';
-import { Heart, Bookmark, Download, Users, Tag } from 'lucide-react';
+import { File, Heart, Bookmark, Download, Users, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const COLORES_PASTEL = [
   'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -47,7 +47,6 @@ function VisorContent() {
   const [totalLikes, setTotalLikes] = useState(0);
   const [totalSaves, setTotalSaves] = useState(0);
 
-  // ✅ Referencias para el Carrusel
   const carruselRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -114,7 +113,7 @@ function VisorContent() {
           .eq('id_carrera', data.id_carrera)
           .eq('activo', true)
           .neq('id_documento', id)
-          .limit(10);
+          .limit(8);
           
         if (recs) setRecomendados(recs);
 
@@ -143,21 +142,18 @@ function VisorContent() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    // Solo activamos el auto-scroll si hay más de 3 recomendados y no estamos arrastrando
     if (recomendados.length > 3 && !isDragging) {
       interval = setInterval(() => {
         if (carruselRef.current) {
           const { scrollLeft, scrollWidth, clientWidth } = carruselRef.current;
           
-          // Si llegamos al final, volvemos al inicio suavemente
           if (scrollLeft + clientWidth >= scrollWidth - 10) {
             carruselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
           } else {
-            // Si no, avanzamos una tarjeta (aprox 220px)
             carruselRef.current.scrollBy({ left: 220, behavior: 'smooth' });
           }
         }
-      }, 3000); // Se mueve cada 3 segundos
+      }, 3000); 
     }
 
     return () => clearInterval(interval);
@@ -179,7 +175,7 @@ function VisorContent() {
     if (!isDragging || !carruselRef.current) return;
     e.preventDefault();
     const x = e.pageX - carruselRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Multiplicador de velocidad
+    const walk = (x - startX) * 2;
     carruselRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -214,7 +210,6 @@ function VisorContent() {
     <NavbarUser>
       <main className="w-full max-w-7xl mx-auto space-y-8 pb-16">
         
-        {/* ... (El bloque del detalle del documento se mantiene igual) ... */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6 h-fit">
             <div className="flex flex-wrap gap-2">
@@ -294,7 +289,7 @@ function VisorContent() {
           </section>
         </div>
 
-        {/* CARRUSEL AUTOMÁTICO Y ARRASTRABLE (FLUIDO) */}
+        {/* ✅ CARRUSEL AUTOMÁTICO Y ARRASTRABLE (FLUIDO) */}
         {recomendados.length > 0 && (
           <section className="mt-8 pt-8 border-t border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Trabajos Recomendados de esta Carrera</h2>

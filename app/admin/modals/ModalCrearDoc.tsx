@@ -315,6 +315,8 @@ export default function ModalCrearDoc({
                 <div className="border rounded-lg bg-gray-50 max-h-32 overflow-y-auto mb-2 text-xs">
                   {usuariosRegistrados
                     .filter((u) => u.nombre_usuario.toString().includes(busquedaAutor))
+                    .filter((u: any) => u.id_tipo_usuario === 1)
+                    .filter((u: any) => u.activo !== false) 
                     .map((u) => (
                       <div
                         key={u.id_usuario}

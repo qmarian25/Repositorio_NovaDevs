@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { Search, Filter, X, LogOut, Grid } from 'lucide-react';
@@ -13,6 +13,13 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
   const pathname = usePathname();
   const router = useRouter();
   const esVistaSimple = pathname === '/invitado/visor' || pathname === '/cuenta';
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleBuscar = () => {
+    if (searchQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     (window as any).toggleDrawerInvitado = (abrir: boolean) => {
@@ -134,13 +141,18 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
             
             {/* Centro: Barra de Búsqueda */}
             <div className="flex-1 max-w-xl relative hidden sm:block">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search
+                className="absolute left-3 top-3 h-4 w-4 text-gray-400 cursor-pointer hover:text-blue-500 transition"
+                onClick={handleBuscar}
+              />
               <input 
                   type="text" 
                   id="inputBusquedaInvitado"
-                  onInput={() => (window as any).filtrarDocumentosInvitado()}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                   placeholder="Buscar por título, carrera..." 
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
@@ -164,10 +176,15 @@ export default function NavbarInvitado({ children }: NavbarInvitadoProps) {
           {/* Barra de búsqueda móvil */}
           <div className="flex sm:hidden gap-3 mb-4 px-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <Search
+                className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 cursor-pointer hover:text-blue-500 transition"
+                onClick={handleBuscar}
+              />
               <input 
                   type="text" 
-                  onInput={() => (window as any).filtrarDocumentosInvitado()}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                   placeholder="Buscar por título, carrera..." 
                   className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800 text-sm"
               />

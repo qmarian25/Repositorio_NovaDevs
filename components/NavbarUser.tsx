@@ -1,22 +1,38 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { logout } from '@/lib/auth';
 import { useAuth } from '@/lib/auth-context';
-import { Search, UserCircle, ChevronDown, Settings, LogOut, Filter, X, Grid } from 'lucide-react';
+import { Search, UserCircle, ChevronDown, Settings, LogOut, Filter, X, Home } from 'lucide-react';
 
 interface NavbarUserProps {
   children?: ReactNode;
-  mostrarTarjetas?: boolean;
 }
 
-export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProps) {
+export default function NavbarUser({ children }: NavbarUserProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const esVistaSimple = pathname === '/visor' || pathname === '/cuenta';
   const { usuario } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const esVistaConBotonInicio = pathname.includes('/visor') || pathname === '/cuenta';
+
+  // ✅ Buscador unificado: funciona en PC y en móvil
+  const handleBuscar = (e?: React.FormEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      // Si está vacío, recargamos la página para limpiar los filtros
+      if (pathname === '/') {
+        router.push('/');
+      } else {
+        router.push('/');
+      }
+    }
+  };
 
   useEffect(() => {
     (window as any).toggleMenuPerfil = (e: MouseEvent) => {
@@ -36,11 +52,8 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
     (window as any).toggleDrawer = (abrir: boolean) => {
       const drawer = document.getElementById('drawerMovil');
       if (!drawer) return;
-      if (abrir) {
-        drawer.classList.remove('hidden');
-      } else {
-        drawer.classList.add('hidden');
-      }
+      if (abrir) drawer.classList.remove('hidden');
+      else drawer.classList.add('hidden');
     };
 
     let filtrosSeleccionados: Record<string, string> = {};
@@ -59,10 +72,16 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
 
     (window as any).limpiarFiltros = () => {
       filtrosSeleccionados = {};
-      const input = document.getElementById('inputBusqueda');
-      const inputMovil = document.getElementById('inputBusquedaMovil');
-      if (input) (input as HTMLInputElement).value = '';
-      if (inputMovil) (inputMovil as HTMLInputElement).value = '';
+      setSearchQuery(''); // Limpia el estado del React
+      
+      const input = document.getElementById('inputBusqueda') as HTMLInputElement;
+      const inputMovil = document.getElementById('inputBusquedaMovil') as HTMLInputElement;
+      const selectFecha = document.getElementById('selectFecha') as HTMLSelectElement;
+      
+      if (input) input.value = '';
+      if (inputMovil) inputMovil.value = '';
+      if (selectFecha) selectFecha.value = '';
+      
       actualizarChips();
       (window as any).filtrarDocumentos();
     };
@@ -92,8 +111,14 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
     };
 
     (window as any).filtrarDocumentos = () => {
-      const input = document.getElementById('inputBusqueda');
-      const textoBusqueda = input ? (input as HTMLInputElement).value.toLowerCase() : '';
+      const input = document.getElementById('inputBusqueda') as HTMLInputElement;
+      const inputMovil = document.getElementById('inputBusquedaMovil') as HTMLInputElement;
+      
+      // ✅ Tomamos el valor del input que esté visible (Escritorio o Móvil)
+      const valorEscritorio = input?.value || '';
+      const valorMovil = inputMovil?.value || '';
+      const textoBusqueda = (valorEscritorio || valorMovil).toLowerCase();
+      
       const tarjetas = document.querySelectorAll('.documento-card');
       const contenedorContador = document.getElementById('contenedorContador');
       const contador = document.getElementById('contadorResultados');
@@ -140,171 +165,233 @@ export default function NavbarUser({ children, mostrarTarjetas }: NavbarUserProp
   }, []);
 
   return (
-    <>
-      <div className="bg-gray-100 min-h-screen flex flex-col">
-        <nav className="bg-blue-900 text-white shadow-md relative z-50">
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4 w-full">
-            
-            {/* 1. Izquierda: Título / Logo */}
-            <div className="font-bold text-lg tracking-wide flex-shrink-0">
-              <a href="/">Repositorio IUJO | NovaDevs</a>
-            </div>
-            
-            {/* 2. Centro: Barra de Búsqueda Integrada en el Navbar */}
-            <div className="flex-1 max-w-xl relative hidden sm:block">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+    <div className="bg-gray-100 min-h-screen flex flex-col font-sans" style={{ fontFamily: 'Poppins, sans-serif' }}>
+      <nav className="bg-blue-900 text-white shadow-md relative z-50">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4 w-full">
+          
+          <div className="font-bold text-lg tracking-wide flex-shrink-0">
+            <a href="/" className="hover:text-blue-200 transition">Repositorio IUJO | NovaDevs</a>
+          </div>
+
+          {/* ✅ Buscador de Escritorio (Controlado por el estado de React) */}
+          <div className="flex-1 max-w-xl relative hidden lg:block">
+            <form onSubmit={handleBuscar}>
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 cursor-pointer hover:text-blue-500 transition" onClick={handleBuscar} />
               <input 
                   type="text" 
                   id="inputBusqueda"
-                  onInput={() => (window as any).filtrarDocumentos()}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por título, autor, carrera..." 
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
-            </div>
+            </form>
+          </div>
 
-            {/* 3. Derecha: Menú de Perfil */}
-            <div className="relative flex-shrink-0 flex items-center gap-2">
-              {mostrarTarjetas && (
-                <button onClick={() => router.push('/')} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
-                  <Grid className="h-4 w-4" /> Tarjetas
-                </button>
-              )}
-              <button onClick={(e) => (window as any).toggleMenuPerfil(e)} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3.5 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
-                <UserCircle className="h-5 w-5" />
-                {usuario ? (
-                  <span>{`${usuario.nombre} ${usuario.apellido}`}</span>
-                ) : (
-                  <span className="text-gray-300">Usuario</span>
-                )}
-                <ChevronDown className="h-4 w-4" />
+          <div className="relative flex-shrink-0 flex items-center gap-2 sm:gap-3">
+            {esVistaConBotonInicio && (
+              <button 
+                onClick={() => router.push('/')} 
+                className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition"
+                title="Volver al inicio"
+              >
+                <Home className="h-4 w-4" />
+                <span className="hidden xl:inline">Inicio</span>
               </button>
+            )}
 
-              <div id="menuPerfil" className="hidden absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 text-gray-800 z-50">
-                <div className="py-1">
-                  <a href="/cuenta" className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition">
-                    <Settings className="h-4 w-4 text-gray-600" /> Configuración de perfil
-                  </a>
-                </div>
-                <div className="border-t border-gray-100 pt-1">
-                  <a href="#" onClick={async (e) => { e.preventDefault(); await logout(); router.push('/login'); }} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
-                    <LogOut className="h-4 w-4" /> Cerrar sesión
-                  </a>
-                </div>
+            <button onClick={(e) => (window as any).toggleMenuPerfil(e)} className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition focus:outline-none">
+              <UserCircle className="h-5 w-5 flex-shrink-0" />
+              {usuario && (
+                <span className="hidden md:inline">{`${usuario.nombre} ${usuario.apellido}`}</span>
+              )}
+              <ChevronDown className="h-4 w-4 hidden md:block" />
+            </button>
+
+            <div id="menuPerfil" className="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 text-gray-800 z-50">
+              <div className="py-1">
+                <a href="/cuenta" className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition">
+                  <Settings className="h-4 w-4 text-gray-600" /> Configuración de perfil
+                </a>
+              </div>
+              <div className="border-t border-gray-100 pt-1">
+                <a href="#" onClick={async (e) => { e.preventDefault(); await logout(); router.push('/login'); }} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
+                  <LogOut className="h-4 w-4" /> Cerrar sesión
+                </a>
               </div>
             </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        {/* Contenedor General */}
-        <div className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col">
-          
-          {/* Barra de búsqueda móvil (visible solo en pantallas pequeñas) */}
-          <div className="flex sm:hidden gap-3 mb-4 px-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-              <input 
-                  type="text" 
-                  id="inputBusquedaMovil"
-                  onInput={() => (window as any).filtrarDocumentos()}
-                  placeholder="Buscar por título, autor, carrera..." 
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800 text-sm"
-              />
-            </div>
-            {!esVistaSimple && (
-              <button onClick={() => (window as any).toggleDrawer(true)} className="flex items-center gap-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0 min-w-[auto]">
-                <Filter className="h-5 w-5" /> Filtros
-              </button>
-            )}
+      <div className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col">
+        
+        {/* ✅ Buscador Móvil (Controlado por el mismo estado de React) */}
+        <div className="flex lg:hidden gap-3 mb-4 px-2">
+          <form onSubmit={handleBuscar} className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" onClick={handleBuscar} />
+            <input 
+                type="text" 
+                id="inputBusquedaMovil"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por título, autor..." 
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800 text-sm"
+            />
+          </form>
+          {!esVistaConBotonInicio && (
+            <button onClick={() => (window as any).toggleDrawer(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0 shadow-sm">
+              <Filter className="h-5 w-5" /> Filtros
+            </button>
+          )}
+        </div>
+
+        {!esVistaConBotonInicio && (
+          <div id="contenedorChips" className="hidden flex-wrap items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <span className="text-xs font-semibold text-gray-500">Filtros aplicados:</span>
+            <div id="listaChips" className="flex flex-wrap gap-2"></div>
+            <button onClick={() => (window as any).limpiarFiltros()} className="text-xs text-red-600 hover:underline ml-auto font-medium">Limpiar todos</button>
           </div>
+        )}
 
-          {/* CHIPS DE FILTROS ACTIVOS */}
-          {!esVistaSimple && (
-            <div id="contenedorChips" className="hidden flex-wrap items-center gap-2 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-              <span className="text-xs font-semibold text-gray-500">Filtros aplicados:</span>
-              <div id="listaChips" className="flex flex-wrap gap-2"></div>
-              <button onClick={() => (window as any).limpiarFiltros()} className="text-xs text-red-600 hover:underline ml-auto font-medium">Limpiar todos</button>
+        <div className="flex gap-6 items-start w-full">
+          
+          {!esVistaConBotonInicio && (
+            <div className="hidden lg:block w-64 flex-shrink-0 sticky top-6">
+              <div className="overflow-hidden" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+                <aside className="w-full bg-white p-4 pb-12 rounded-xl border border-gray-200 shadow-sm overflow-y-auto" style={{ maxHeight: 'calc(100vh - 6rem)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  
+                  <h3 className="font-bold text-gray-800 text-base border-b pb-3 mb-3">Filtros</h3>
+                  
+                  <details className="group [&_summary::-webkit-details-marker]:hidden border-b border-gray-100 pb-2 mb-2">
+                    <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-semibold text-gray-700 hover:text-blue-600">
+                      Carrera
+                      <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
+                    </summary>
+                    <div className="space-y-1 mt-2 pl-2">
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Informática')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Informática</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Contaduría')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Contaduría</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Administración')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Administración</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Integral')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Integral</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Inicial')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Inicial</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Electrónica')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Electrónica</button>
+                    </div>
+                  </details>
+
+                  <details className="group [&_summary::-webkit-details-marker]:hidden border-b border-gray-100 pb-2 mb-2">
+                    <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-semibold text-gray-700 hover:text-blue-600">
+                      Tipo de Documento
+                      <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
+                    </summary>
+                    <div className="space-y-1 mt-2 pl-2">
+                      <button onClick={() => (window as any).seleccionarFiltro('tipo', 'Tesis')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Tesis</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('tipo', 'Sistematización')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Sistematización</button>
+                    </div>
+                  </details>
+
+                  <div className="pt-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Carga</label>
+                    <select
+                      id="selectFecha"
+                      onChange={(e) => {
+                        const valor = e.target.value;
+                        if (valor) (window as any).seleccionarFiltro('fecha', valor);
+                        else (window as any).removerFiltro('fecha');
+                      }}
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="">Seleccione la fecha</option>
+                      <option value="Última semana">Última semana</option>
+                      <option value="Último mes">Último mes</option>
+                      <option value="Últimos 6 meses">Últimos 6 meses</option>
+                      <option value="Último año">Último año</option>
+                    </select>
+                  </div>
+
+                  <style dangerouslySetInnerHTML={{__html: `
+                    aside::-webkit-scrollbar { display: none !important; }
+                  `}} />
+                </aside>
+              </div>
             </div>
           )}
 
-          {/* Layout Horizontal */}
-          <div className="flex gap-6 items-start w-full">
-            
-            {/* SIDEBAR DE FILTROS POR FACETAS */}
-            {!esVistaSimple && (
-              <aside className="hidden md:block w-64 bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-6 flex-shrink-0 sticky top-6 max-h-[calc(100vh-14rem)] overflow-y-auto">
-                <h3 className="font-bold text-gray-800 text-base border-b pb-2">Filtros por Facetas</h3>
-                
-                <div>
-                  <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Carrera</h4>
-                  <div className="space-y-1">
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Informática')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Informática</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Contaduría')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Administración de Empresas')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Mención: Integral')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Integral</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Mención: Inicial')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Inicial</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Electrónica')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Electrónica</button>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Tipo de Documento</h4>
-                  <div className="space-y-1">
-                    <button onClick={() => (window as any).seleccionarFiltro('tipo', 'Tesis')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Tesis</button>
-                    <button onClick={() => (window as any).seleccionarFiltro('tipo', 'Sistematización')} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Sistematización</button>
-                  </div>
-                </div>
-              </aside>
-            )}
-
-            {/* Contenido inyectado por las páginas */}
-            <div className="flex-1 min-w-0 overflow-y-auto">
-              {children}
-            </div>
-          </div>
-        </div>
-         {/* INTEGRACIÓN DEL FOOTER DENTRO DE NAVBAR */}
-        <Footer/>
-
-        {/* FILTROS PARA MÓVIL */}
-        <div id="drawerMovil" className="hidden fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity">
-          <div className="w-80 max-w-full bg-white h-full shadow-2xl p-6 flex flex-col space-y-6 overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-4">
-              <h3 className="font-bold text-gray-900 text-lg">Filtros por Facetas</h3>
-              <button onClick={() => (window as any).toggleDrawer(false)} className="p-2 text-gray-500 hover:text-gray-800 rounded-lg">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="space-y-6 flex-1">
-              <div>
-                <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Carrera</h4>
-                <div className="space-y-1">
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Informática'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Informática</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Contaduría'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Administración de Empresas'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Mención: Integral'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Integral</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Mención: Inicial'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Inicial</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Electrónica'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Electrónica</button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">Tipo de Documento</h4>
-                <div className="space-y-1">
-                  <button onClick={() => { (window as any).seleccionarFiltro('tipo', 'Tesis'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Tesis</button>
-                  <button onClick={() => { (window as any).seleccionarFiltro('tipo', 'Sistematización'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-700 hover:text-blue-600 py-1.5 px-2 rounded hover:bg-blue-50">Sistematización</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <button onClick={() => { (window as any).limpiarFiltros(); (window as any).toggleDrawer(false); }} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold py-2.5 rounded-lg transition">
-                Limpiar todos los filtros
-              </button>
-            </div>
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            {children}
           </div>
         </div>
       </div>
-    </>
+
+      <Footer/>
+
+      {/* Menú de filtros móvil (Drawer) */}
+      <div id="drawerMovil" className="hidden fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity">
+        <div className="w-80 max-w-full bg-white h-full shadow-2xl p-6 flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center justify-between border-b pb-4 mb-4">
+            <h3 className="font-bold text-gray-900 text-lg">Filtros</h3>
+            <button onClick={() => (window as any).toggleDrawer(false)} className="p-2 text-gray-500 hover:text-gray-800 rounded-lg">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="space-y-2 flex-1">
+            <details className="group [&_summary::-webkit-details-marker]:hidden border-b border-gray-100 pb-2 mb-2">
+              <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-semibold text-gray-700">
+                Carrera
+                <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
+              </summary>
+              <div className="space-y-1 mt-2 pl-2">
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Informática'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Informática</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Contaduría'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Contaduría</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Administración'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Administración</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Integral'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Integral</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Inicial'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Inicial</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Electrónica'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Electrónica</button>
+              </div>
+            </details>
+
+            <details className="group [&_summary::-webkit-details-marker]:hidden border-b border-gray-100 pb-2 mb-2">
+              <summary className="flex items-center justify-between cursor-pointer py-2 text-sm font-semibold text-gray-700">
+                Tipo de Documento
+                <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
+              </summary>
+              <div className="space-y-1 mt-2 pl-2">
+                <button onClick={() => { (window as any).seleccionarFiltro('tipo', 'Tesis'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Tesis</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('tipo', 'Sistematización'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Sistematización</button>
+              </div>
+            </details>
+
+            <div className="pt-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Carga</label>
+              <select
+                onChange={(e) => {
+                  const valor = e.target.value;
+                  if (valor) (window as any).seleccionarFiltro('fecha', valor);
+                  else (window as any).removerFiltro('fecha');
+                  (window as any).toggleDrawer(false);
+                }}
+                className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="">Cualquier fecha</option>
+                <option value="Última semana">Última semana</option>
+                <option value="Último mes">Último mes</option>
+                <option value="Últimos 6 meses">Últimos 6 meses</option>
+                <option value="Último año">Último año</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t mt-4">
+            <button onClick={() => { (window as any).limpiarFiltros(); (window as any).toggleDrawer(false); }} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold py-2.5 rounded-lg transition">
+              Limpiar todos los filtros
+            </button>
+          </div>
+
+          <style dangerouslySetInnerHTML={{__html: `
+            #drawerMovil > div::-webkit-scrollbar { display: none !important; }
+          `}} />
+        </div>
+      </div>
+    </div>
   );
 }

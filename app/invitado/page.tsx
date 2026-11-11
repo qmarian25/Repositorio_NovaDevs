@@ -82,47 +82,53 @@ export default function InvitadoPage() {
             </p>
           </div>
         ) : (
+          /* 
+            ✅ GRILLA RESPONSIVE ESCALONADA:
+            - Celular: 3 columnas.
+            - Tablet: 4 columnas.
+            - PC / Laptop: 5 columnas.
+          */
           <div 
             id="listaResultadosInvitado" 
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 sm:gap-2 md:gap-2.5 lg:gap-3 w-full min-w-0"
+            className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full min-w-0"
           >
             {documentos.map((doc) => (
               <div 
                 key={doc.id_documento}
-                className="documento-card bg-white border border-gray-200/90 rounded-lg sm:rounded-xl md:rounded-2xl p-1.5 sm:p-2 md:p-3 shadow-xs hover:shadow-md transition flex flex-col justify-between group relative bg-gradient-to-b from-white to-gray-50/30 w-full min-w-0 overflow-hidden"
+                className="documento-card bg-white border border-gray-200/90 rounded-lg sm:rounded-xl md:rounded-2xl p-1.5 sm:p-2 md:p-2.5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group relative bg-gradient-to-b from-white to-gray-50/30 w-full min-w-0 overflow-hidden"
                 data-carrera={doc.carrera_nombre}
                 data-tipo={doc.tipo_nombre}
                 data-anio={new Date(doc.fecha_publicacion).getFullYear()}
                 data-texto={doc.titulo.toLowerCase()}
               >
-                <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 min-w-0">
+                <div className="space-y-1.5 sm:space-y-2 min-w-0 flex flex-col h-full">
                   
                   <div className="relative min-w-0">
-                    <a href={`/invitado/visor?id=${doc.id_documento}`} className="block w-full h-24 sm:h-36 md:h-40 lg:h-48 bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1 md:p-1.5">
+                    {/* ✅ aspect-[3/4] asegura que la tarjeta siempre mantenga la proporción sin aplastarse */}
+                    <a href={`/invitado/visor?id=${doc.id_documento}`} className="block w-full aspect-[3/4] bg-white border border-gray-200/80 rounded-md sm:rounded-lg md:rounded-xl overflow-hidden shadow-inner relative group-hover:border-blue-300 transition p-0.5 sm:p-1">
                       <div className="w-full h-full rounded-sm sm:rounded-md md:rounded-lg overflow-hidden relative">
                         
-                        <PdfThumbnail urlPortada={doc.url_portada} titulo={doc.titulo} className="w-full h-full" />
+                        <PdfThumbnail urlPortada={doc.url_portada} titulo={doc.titulo} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                         
-                        <span className="absolute top-0 left-0 bg-black text-white text-[7px] sm:text-[8px] md:text-[10px] font-black px-1 sm:px-1.5 md:px-2.5 py-0.5 rounded-tl-sm rounded-br-md tracking-wider sm:tracking-widest uppercase shadow-sm z-10">
+                        <span className="absolute top-0 left-0 bg-black text-white text-[7px] sm:text-[8px] md:text-[9px] font-black px-1 sm:px-1.5 py-0.5 rounded-tl-sm rounded-br-md tracking-wider sm:tracking-widest uppercase shadow-sm z-10">
                           PDF
                         </span>
                       </div>
                     </a>
                   </div>
 
-                  <div className="space-y-0.5 sm:space-y-1 md:space-y-1.5 min-w-0">
-                    <span className="inline-block bg-blue-50 text-blue-700 text-[7px] sm:text-[8px] md:text-[10px] font-semibold px-1 sm:px-1.5 md:px-2.5 py-0.5 rounded-full uppercase tracking-wider max-w-full truncate">
+                  <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                    <span className="inline-block bg-blue-50 text-blue-700 text-[7px] sm:text-[8px] md:text-[9px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full uppercase tracking-wider max-w-full truncate">
                       {doc.tipo_nombre}
                     </span>
                     
                     <a href={`/invitado/visor?id=${doc.id_documento}`} className="block min-w-0">
-                      <h3 className="font-bold text-gray-900 text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
+                      <h3 className="font-bold text-gray-900 text-[9px] sm:text-[10px] md:text-[11px] lg:text-xs line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
                         {doc.titulo}
                       </h3>
                     </a>
                   </div>
                 </div>
-                <div className="pt-0.5 sm:pt-1"></div>
               </div>
             ))}
           </div>

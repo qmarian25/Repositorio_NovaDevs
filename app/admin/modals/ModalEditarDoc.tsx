@@ -268,22 +268,24 @@ export default function ModalEditarDoc({
                   onChange={(e) => setBusquedaAutor(e.target.value)}
                   className="w-full border border-gray-300 p-2 rounded-lg text-sm bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                 />
-                {busquedaAutor.length > 0 && (
-                  <div className="border rounded-lg bg-gray-50 max-h-32 overflow-y-auto mb-2 text-xs">
-                    {usuariosRegistrados
-                      .filter((u) => u.nombre_usuario.toString().includes(busquedaAutor))
-                      .map((u) => (
-                        <div
-                          key={u.id_usuario}
-                          onClick={() => agregarAutor(u)}
-                          className="p-2 hover:bg-blue-100 cursor-pointer flex justify-between items-center"
-                        >
-                          <span className="font-bold text-gray-800">{u.nombre_usuario}</span>
-                          <span className="text-gray-600">{u.nombreCompleto}</span>
-                        </div>
-                      ))}
-                  </div>
-                )}
+              {busquedaAutor.length > 0 && (
+                <div className="border rounded-lg bg-gray-50 max-h-32 overflow-y-auto mb-2 text-xs">
+                  {usuariosRegistrados
+                    .filter((u) => u.nombre_usuario.toString().includes(busquedaAutor))
+                    .filter((u: any) => u.id_tipo_usuario === 1)
+                    .filter((u: any) => u.activo !== false) 
+                    .map((u) => (
+                      <div
+                        key={u.id_usuario}
+                        onClick={() => agregarAutor(u)}
+                        className="p-2 hover:bg-blue-100 cursor-pointer flex justify-between items-center"
+                      >
+                        <span className="font-bold text-gray-800">{u.nombre_usuario}</span>
+                        <span className="text-gray-600">{u.nombreCompleto}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
                 <div className="flex flex-wrap gap-2">
                   {autoresSeleccionados.map((a) => (
                     <span
