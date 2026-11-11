@@ -22,6 +22,7 @@ export default function PerfilPage() {
     { id: 'likes', label: 'Me Gusta', icon: Heart },
   ] as const;
 
+  //Page
   return (
     <NavbarUser>
       <div className="w-full flex flex-col space-y-8 pb-16 overflow-x-hidden">
