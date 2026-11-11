@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import NavbarAdminSimple from '@/components/NavbarAdminSimple';
+import NavbarAdminSimple from '@/components/NavbarAdmin';
 import { supabase } from '@/lib/supabase';
 import PdfThumbnail from '../modals/PdfThumbnail';
 import { File, Download, Users, Tag } from 'lucide-react';

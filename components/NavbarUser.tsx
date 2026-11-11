@@ -16,21 +16,53 @@ export default function NavbarUser({ children }: NavbarUserProps) {
   const router = useRouter();
   const { usuario } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [anioFiltro, setAnioFiltro] = useState('');
+  const [rangoFiltro, setRangoFiltro] = useState('');
 
   const esVistaConBotonInicio = pathname.includes('/visor') || pathname === '/cuenta';
 
-  // ✅ Buscador unificado: funciona en PC y en móvil
   const handleBuscar = (e?: React.FormEvent | React.KeyboardEvent) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      // Si está vacío, recargamos la página para limpiar los filtros
-      if (pathname === '/') {
-        router.push('/');
-      } else {
-        router.push('/');
-      }
+      if (pathname === '/') router.push('/');
+      else router.push('/');
+    }
+  };
+
+  // ✅ Lógica para el filtro de Año
+  const aplicarFiltroAnio = (anio: string) => {
+    setAnioFiltro(anio);
+    setRangoFiltro(''); // Limpiamos el rango si escribe un año
+    
+    // Limpiamos el select visualmente
+    const selectRango = document.getElementById('selectRango') as HTMLSelectElement;
+    if (selectRango) selectRango.value = '';
+
+    if (!anio.trim()) {
+      (window as any).removerFiltro('anio');
+    } else {
+      (window as any).seleccionarFiltro('anio', anio.trim());
+    }
+  };
+
+  // ✅ Lógica para el filtro de Rango (Último mes, etc.)
+  const aplicarFiltroRango = (rango: string) => {
+    setRangoFiltro(rango);
+    setAnioFiltro(''); // Limpiamos el año si selecciona un rango
+    
+    // Limpiamos el input visualmente
+    const inputAnio = document.getElementById('inputAnio') as HTMLInputElement;
+    const inputAnioMovil = document.getElementById('inputAnioMovil') as HTMLInputElement;
+    if (inputAnio) inputAnio.value = '';
+    if (inputAnioMovil) inputAnioMovil.value = '';
+
+    if (!rango) {
+      (window as any).removerFiltro('rango');
+    } else {
+      (window as any).seleccionarFiltro('rango', rango);
     }
   };
 
@@ -72,15 +104,23 @@ export default function NavbarUser({ children }: NavbarUserProps) {
 
     (window as any).limpiarFiltros = () => {
       filtrosSeleccionados = {};
-      setSearchQuery(''); // Limpia el estado del React
+      setSearchQuery('');
+      setAnioFiltro('');
+      setRangoFiltro('');
       
       const input = document.getElementById('inputBusqueda') as HTMLInputElement;
       const inputMovil = document.getElementById('inputBusquedaMovil') as HTMLInputElement;
-      const selectFecha = document.getElementById('selectFecha') as HTMLSelectElement;
+      const inputAnio = document.getElementById('inputAnio') as HTMLInputElement;
+      const inputAnioMovil = document.getElementById('inputAnioMovil') as HTMLInputElement;
+      const selectRango = document.getElementById('selectRango') as HTMLSelectElement;
+      const selectRangoMovil = document.getElementById('selectRangoMovil') as HTMLSelectElement;
       
       if (input) input.value = '';
       if (inputMovil) inputMovil.value = '';
-      if (selectFecha) selectFecha.value = '';
+      if (inputAnio) inputAnio.value = '';
+      if (inputAnioMovil) inputAnioMovil.value = '';
+      if (selectRango) selectRango.value = '';
+      if (selectRangoMovil) selectRangoMovil.value = '';
       
       actualizarChips();
       (window as any).filtrarDocumentos();
@@ -97,9 +137,13 @@ export default function NavbarUser({ children }: NavbarUserProps) {
         contenedor.classList.remove('hidden');
         contenedor.classList.add('flex');
         keys.forEach((cat) => {
+          let textoChip = filtrosSeleccionados[cat];
+          if (cat === 'anio') textoChip = 'Año: ' + filtrosSeleccionados[cat];
+          if (cat === 'rango') textoChip = 'Rango: ' + filtrosSeleccionados[cat];
+
           lista.innerHTML += `
               <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  ${filtrosSeleccionados[cat]} 
+                  ${textoChip} 
                   <button onclick="(window as any).removerFiltro('${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
               </span>
           `;
@@ -114,7 +158,6 @@ export default function NavbarUser({ children }: NavbarUserProps) {
       const input = document.getElementById('inputBusqueda') as HTMLInputElement;
       const inputMovil = document.getElementById('inputBusquedaMovil') as HTMLInputElement;
       
-      // ✅ Tomamos el valor del input que esté visible (Escritorio o Móvil)
       const valorEscritorio = input?.value || '';
       const valorMovil = inputMovil?.value || '';
       const textoBusqueda = (valorEscritorio || valorMovil).toLowerCase();
@@ -142,17 +185,43 @@ export default function NavbarUser({ children }: NavbarUserProps) {
       }
 
       let visibles = 0;
+      const hoy = new Date();
 
       tarjetas.forEach((card) => {
         const carreraCard = card.getAttribute('data-carrera');
         const tipoCard = card.getAttribute('data-tipo');
         const contenidoTexto = card.getAttribute('data-texto');
+        const fechaCardStr = card.getAttribute('data-fecha');
+        
+        const fechaCard = fechaCardStr ? new Date(fechaCardStr) : null;
+        let anioCard = fechaCard ? fechaCard.getFullYear().toString() : '';
 
+        // 1. Filtros básicos
         let coincideCarrera = !filtrosSeleccionados['carrera'] || filtrosSeleccionados['carrera'] === carreraCard;
         let coincideTipo = !filtrosSeleccionados['tipo'] || filtrosSeleccionados['tipo'] === tipoCard;
         let coincideTexto = !textoBusqueda || contenidoTexto?.includes(textoBusqueda);
+        
+        // 2. Filtro por Año Exacto
+        let coincideAnio = true;
+        if (filtrosSeleccionados['anio']) {
+          coincideAnio = anioCard === filtrosSeleccionados['anio'];
+        }
 
-        if (coincideCarrera && coincideTipo && coincideTexto) {
+        // 3. Filtro por Rango (Último mes, 6 meses, 1 año)
+        let coincideRango = true;
+        if (filtrosSeleccionados['rango'] && fechaCard) {
+          const mesesDiferencia = (hoy.getFullYear() - fechaCard.getFullYear()) * 12 + (hoy.getMonth() - fechaCard.getMonth());
+          
+          if (filtrosSeleccionados['rango'] === 'Último mes') {
+            coincideRango = mesesDiferencia <= 1;
+          } else if (filtrosSeleccionados['rango'] === 'Últimos 6 meses') {
+            coincideRango = mesesDiferencia <= 6;
+          } else if (filtrosSeleccionados['rango'] === 'Último año') {
+            coincideRango = mesesDiferencia <= 12;
+          }
+        }
+
+        if (coincideCarrera && coincideTipo && coincideTexto && coincideAnio && coincideRango) {
           (card as HTMLElement).style.display = 'flex';
           visibles++;
         } else {
@@ -173,7 +242,6 @@ export default function NavbarUser({ children }: NavbarUserProps) {
             <a href="/" className="hover:text-blue-200 transition">Repositorio IUJO | NovaDevs</a>
           </div>
 
-          {/* ✅ Buscador de Escritorio (Controlado por el estado de React) */}
           <div className="flex-1 max-w-xl relative hidden lg:block">
             <form onSubmit={handleBuscar}>
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 cursor-pointer hover:text-blue-500 transition" onClick={handleBuscar} />
@@ -226,7 +294,6 @@ export default function NavbarUser({ children }: NavbarUserProps) {
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col">
         
-        {/* ✅ Buscador Móvil (Controlado por el mismo estado de React) */}
         <div className="flex lg:hidden gap-3 mb-4 px-2">
           <form onSubmit={handleBuscar} className="relative flex-1">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" onClick={handleBuscar} />
@@ -271,9 +338,9 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                     <div className="space-y-1 mt-2 pl-2">
                       <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Informática')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Informática</button>
                       <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Contaduría')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Administración')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Administración</button>
-                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Integral')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Integral</button>
-                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Inicial')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Inicial</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Administración de Empresas')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Mención: Integral')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Integral</button>
+                      <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Educación Mención: Inicial')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Mención: Inicial</button>
                       <button onClick={() => (window as any).seleccionarFiltro('carrera', 'Electrónica')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Electrónica</button>
                     </div>
                   </details>
@@ -289,23 +356,35 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                     </div>
                   </details>
 
-                  <div className="pt-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Carga</label>
-                    <select
-                      id="selectFecha"
-                      onChange={(e) => {
-                        const valor = e.target.value;
-                        if (valor) (window as any).seleccionarFiltro('fecha', valor);
-                        else (window as any).removerFiltro('fecha');
-                      }}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="">Seleccione la fecha</option>
-                      <option value="Última semana">Última semana</option>
-                      <option value="Último mes">Último mes</option>
-                      <option value="Últimos 6 meses">Últimos 6 meses</option>
-                      <option value="Último año">Último año</option>
-                    </select>
+                  {/* ✅ FILTROS DE FECHA (Año Exacto y Rango) */}
+                  <div className="pt-2 space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Año de Publicación</label>
+                      <input
+                        type="number"
+                        id="inputAnio"
+                        placeholder="Ej. 2024"
+                        value={anioFiltro}
+                        onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                        min="1900"
+                        max="2100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Rango de Fecha</label>
+                      <select
+                        id="selectRango"
+                        value={rangoFiltro}
+                        onChange={(e) => aplicarFiltroRango(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                      >
+                        <option value="">Seleccione un rango</option>
+                        <option value="Último mes">Más reciente</option>
+                        <option value="Últimos 6 meses">Últimos 6 meses</option>
+                        <option value="Último año">Último año</option>
+                      </select>
+                    </div>
                   </div>
 
                   <style dangerouslySetInnerHTML={{__html: `
@@ -324,7 +403,6 @@ export default function NavbarUser({ children }: NavbarUserProps) {
 
       <Footer/>
 
-      {/* Menú de filtros móvil (Drawer) */}
       <div id="drawerMovil" className="hidden fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity">
         <div className="w-80 max-w-full bg-white h-full shadow-2xl p-6 flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex items-center justify-between border-b pb-4 mb-4">
@@ -343,9 +421,9 @@ export default function NavbarUser({ children }: NavbarUserProps) {
               <div className="space-y-1 mt-2 pl-2">
                 <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Informática'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Informática</button>
                 <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Contaduría'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Administración'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Administración</button>
-                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Integral'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Integral</button>
-                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Inicial'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Inicial</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Administración de Empresas'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Mención: Integral'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Mención: Integral</button>
+                <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Educación Mención: Inicial'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Mención: Inicial</button>
                 <button onClick={() => { (window as any).seleccionarFiltro('carrera', 'Electrónica'); (window as any).toggleDrawer(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Electrónica</button>
               </div>
             </details>
@@ -361,23 +439,34 @@ export default function NavbarUser({ children }: NavbarUserProps) {
               </div>
             </details>
 
-            <div className="pt-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Carga</label>
-              <select
-                onChange={(e) => {
-                  const valor = e.target.value;
-                  if (valor) (window as any).seleccionarFiltro('fecha', valor);
-                  else (window as any).removerFiltro('fecha');
-                  (window as any).toggleDrawer(false);
-                }}
-                className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                <option value="">Cualquier fecha</option>
-                <option value="Última semana">Última semana</option>
-                <option value="Último mes">Último mes</option>
-                <option value="Últimos 6 meses">Últimos 6 meses</option>
-                <option value="Último año">Último año</option>
-              </select>
+            <div className="pt-2 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Año de Publicación</label>
+                <input
+                  type="number"
+                  id="inputAnioMovil"
+                  placeholder="Ej. 2024"
+                  value={anioFiltro}
+                  onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                  min="1900"
+                  max="2100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Rango de Fecha</label>
+                <select
+                  id="selectRangoMovil"
+                  value={rangoFiltro}
+                  onChange={(e) => aplicarFiltroRango(e.target.value)}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Seleccione un rango</option>
+                  <option value="Último mes">Más reciente</option>
+                  <option value="Últimos 6 meses">Últimos 6 meses</option>
+                  <option value="Último año">Último año</option>
+                </select>
+              </div>
             </div>
           </div>
 
