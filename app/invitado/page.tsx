@@ -154,10 +154,12 @@ function DocumentosInvitadoContent() {
 
 export default function InvitadoPage() {
   return (
-    <NavbarInvitado>
-      <Suspense fallback={<div className="flex justify-center py-20 w-full"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div></div>}>
-        <DocumentosInvitadoContent />
-      </Suspense>
-    </NavbarInvitado>
+    <Suspense fallback={<div className="flex justify-center py-20 w-full"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div></div>}>
+      <NavbarInvitado>
+        <Suspense fallback={<div className="flex justify-center py-20 w-full"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div></div>}>
+          <DocumentosInvitadoContent />
+        </Suspense>
+      </NavbarInvitado>
+    </Suspense>
   );
 }
