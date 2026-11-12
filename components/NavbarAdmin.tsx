@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useEffect, useState, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { Search, Filter, X, LogOut, ChevronDown, UserCircle } from 'lucide-react';
 
@@ -9,207 +9,74 @@ interface NavbarAdminProps {
   children?: ReactNode;
 }
 
-export default function NavbarAdmin({ children }: NavbarAdminProps) {
+function NavbarAdminContent({ children }: NavbarAdminProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const [anioFiltro, setAnioFiltro] = useState('');
-  const [rangoFiltro, setRangoFiltro] = useState('');
+  const searchParams = useSearchParams();
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [filtroCarrera, setFiltroCarrera] = useState(searchParams.get('carrera') || '');
+  const [filtroTipo, setFiltroTipo] = useState(searchParams.get('tipo') || '');
+  const [filtroAnio, setFiltroAnio] = useState(searchParams.get('anio') || '');
+  const [filtroRango, setFiltroRango] = useState(searchParams.get('rango') || '');
 
   const esVistaConBotonVolver = pathname.includes('/visor');
 
-  // ✅ Redirige a /admin/repositorio y no al panel principal
+  // ✅ Sincronizar los estados locales con los parámetros de la URL
+  useEffect(() => {
+    setSearchQuery(searchParams.get('search') || '');
+    setFiltroCarrera(searchParams.get('carrera') || '');
+    setFiltroTipo(searchParams.get('tipo') || '');
+    setFiltroAnio(searchParams.get('anio') || '');
+    setFiltroRango(searchParams.get('rango') || '');
+  }, [searchParams]);
+
+  // ✅ Función para actualizar la URL (Filtrado en la página)
+  const actualizarURL = (key: string, value: string) => {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.push(`/admin/repositorio?${params.toString()}`);
+  };
+
   const handleBuscar = (e?: React.FormEvent | React.KeyboardEvent) => {
     if (e) e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/admin/repositorio?search=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      router.push('/admin/repositorio');
-    }
+    actualizarURL('search', searchQuery.trim());
   };
 
-  const aplicarFiltroAnio = (anio: string) => {
-    setAnioFiltro(anio);
-    setRangoFiltro(''); 
-    
-    const selectRango = document.getElementById('selectRangoAdmin') as HTMLSelectElement;
-    const selectRangoMovil = document.getElementById('selectRangoMovilAdmin') as HTMLSelectElement;
-    if (selectRango) selectRango.value = '';
-    if (selectRangoMovil) selectRangoMovil.value = '';
-
-    if (!anio.trim()) {
-      (window as any).removerFiltroAdmin('anio');
-    } else {
-      (window as any).seleccionarFiltroAdmin('anio', anio.trim());
-    }
+  const removerFiltro = (key: string) => {
+    if (key === 'carrera') setFiltroCarrera('');
+    if (key === 'tipo') setFiltroTipo('');
+    if (key === 'anio') setFiltroAnio('');
+    if (key === 'rango') setFiltroRango('');
+    actualizarURL(key, '');
   };
 
-  const aplicarFiltroRango = (rango: string) => {
-    setRangoFiltro(rango);
-    setAnioFiltro(''); 
-    
-    const inputAnio = document.getElementById('inputAnioAdmin') as HTMLInputElement;
-    const inputAnioMovil = document.getElementById('inputAnioMovilAdmin') as HTMLInputElement;
-    if (inputAnio) inputAnio.value = '';
-    if (inputAnioMovil) inputAnioMovil.value = '';
-
-    if (!rango) {
-      (window as any).removerFiltroAdmin('rango');
-    } else {
-      (window as any).seleccionarFiltroAdmin('rango', rango);
-    }
+  const limpiarFiltros = () => {
+    setSearchQuery('');
+    setFiltroCarrera('');
+    setFiltroTipo('');
+    setFiltroAnio('');
+    setFiltroRango('');
+    router.push('/admin/repositorio');
   };
 
-  useEffect(() => {
-    (window as any).toggleDrawerAdmin = (abrir: boolean) => {
-      const drawer = document.getElementById('drawerMovilAdmin');
-      if (!drawer) return;
-      if (abrir) drawer.classList.remove('hidden');
-      else drawer.classList.add('hidden');
-    };
+  const toggleDrawerAdmin = (abrir: boolean) => {
+    const drawer = document.getElementById('drawerMovilAdmin');
+    if (!drawer) return;
+    if (abrir) drawer.classList.remove('hidden');
+    else drawer.classList.add('hidden');
+  };
 
-    let filtrosSeleccionadosAdmin: Record<string, string> = {};
-
-    (window as any).seleccionarFiltroAdmin = (categoria: string, valor: string) => {
-      filtrosSeleccionadosAdmin[categoria] = valor;
-      actualizarChipsAdmin();
-      (window as any).filtrarDocumentosAdmin();
-    };
-
-    (window as any).removerFiltroAdmin = (categoria: string) => {
-      delete filtrosSeleccionadosAdmin[categoria];
-      actualizarChipsAdmin();
-      (window as any).filtrarDocumentosAdmin();
-    };
-
-    (window as any).limpiarFiltrosAdmin = () => {
-      filtrosSeleccionadosAdmin = {};
-      setSearchQuery('');
-      setAnioFiltro('');
-      setRangoFiltro('');
-      
-      const input = document.getElementById('inputBusquedaAdmin') as HTMLInputElement;
-      const inputMovil = document.getElementById('inputBusquedaAdminMovil') as HTMLInputElement;
-      const inputAnio = document.getElementById('inputAnioAdmin') as HTMLInputElement;
-      const inputAnioMovil = document.getElementById('inputAnioMovilAdmin') as HTMLInputElement;
-      const selectRango = document.getElementById('selectRangoAdmin') as HTMLSelectElement;
-      const selectRangoMovil = document.getElementById('selectRangoMovilAdmin') as HTMLSelectElement;
-      
-      if (input) input.value = '';
-      if (inputMovil) inputMovil.value = '';
-      if (inputAnio) inputAnio.value = '';
-      if (inputAnioMovil) inputAnioMovil.value = '';
-      if (selectRango) selectRango.value = '';
-      if (selectRangoMovil) selectRangoMovil.value = '';
-      
-      actualizarChipsAdmin();
-      (window as any).filtrarDocumentosAdmin();
-    };
-
-    const actualizarChipsAdmin = () => {
-      const contenedor = document.getElementById('contenedorChipsAdmin');
-      const lista = document.getElementById('listaChipsAdmin');
-      if (!contenedor || !lista) return;
-      lista.innerHTML = '';
-
-      const keys = Object.keys(filtrosSeleccionadosAdmin);
-      if (keys.length > 0) {
-        contenedor.classList.remove('hidden');
-        contenedor.classList.add('flex');
-        keys.forEach((cat) => {
-          let textoChip = filtrosSeleccionadosAdmin[cat];
-          if (cat === 'anio') textoChip = 'Año: ' + filtrosSeleccionadosAdmin[cat];
-          if (cat === 'rango') textoChip = 'Rango: ' + filtrosSeleccionadosAdmin[cat];
-
-          lista.innerHTML += `
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  ${textoChip} 
-                  <button onclick="(window as any).removerFiltroAdmin('${cat}')" class="hover:text-blue-900 font-bold ml-1">×</button>
-              </span>
-          `;
-        });
-      } else {
-        contenedor.classList.remove('flex');
-        contenedor.classList.add('hidden');
-      }
-    };
-
-    (window as any).filtrarDocumentosAdmin = () => {
-      const input = document.getElementById('inputBusquedaAdmin') as HTMLInputElement;
-      const inputMovil = document.getElementById('inputBusquedaAdminMovil') as HTMLInputElement;
-      
-      const valorEscritorio = input?.value || '';
-      const valorMovil = inputMovil?.value || '';
-      const textoBusqueda = (valorEscritorio || valorMovil).toLowerCase();
-      
-      const tarjetas = document.querySelectorAll('.documento-card');
-      const contenedorContador = document.getElementById('contenedorContadorAdmin');
-      const contador = document.getElementById('contadorResultadosAdmin');
-
-      const tieneFiltrosActivos = Object.keys(filtrosSeleccionadosAdmin).length > 0 || textoBusqueda.length > 0;
-
-      if (!tieneFiltrosActivos) {
-        if (contenedorContador) {
-          contenedorContador.classList.remove('flex');
-          contenedorContador.classList.add('hidden');
-        }
-        tarjetas.forEach((card) => {
-          (card as HTMLElement).style.display = 'flex';
-        });
-        return;
-      }
-
-      if (contenedorContador) {
-        contenedorContador.classList.remove('hidden');
-        contenedorContador.classList.add('flex');
-      }
-
-      let visibles = 0;
-      const hoy = new Date();
-
-      tarjetas.forEach((card) => {
-        const carreraCard = card.getAttribute('data-carrera');
-        const tipoCard = card.getAttribute('data-tipo');
-        const contenidoTexto = card.getAttribute('data-texto');
-        const fechaCardStr = card.getAttribute('data-fecha');
-        
-        const fechaCard = fechaCardStr ? new Date(fechaCardStr) : null;
-        let anioCard = fechaCard ? fechaCard.getFullYear().toString() : '';
-
-        let coincideCarrera = !filtrosSeleccionadosAdmin['carrera'] || filtrosSeleccionadosAdmin['carrera'] === carreraCard;
-        let coincideTipo = !filtrosSeleccionadosAdmin['tipo'] || filtrosSeleccionadosAdmin['tipo'] === tipoCard;
-        let coincideTexto = !textoBusqueda || contenidoTexto?.includes(textoBusqueda);
-        
-        let coincideAnio = true;
-        if (filtrosSeleccionadosAdmin['anio']) {
-          coincideAnio = anioCard === filtrosSeleccionadosAdmin['anio'];
-        }
-
-        let coincideRango = true;
-        if (filtrosSeleccionadosAdmin['rango'] && fechaCard) {
-          const mesesDiferencia = (hoy.getFullYear() - fechaCard.getFullYear()) * 12 + (hoy.getMonth() - fechaCard.getMonth());
-          
-          if (filtrosSeleccionadosAdmin['rango'] === 'Último mes') {
-            coincideRango = mesesDiferencia <= 1;
-          } else if (filtrosSeleccionadosAdmin['rango'] === 'Últimos 6 meses') {
-            coincideRango = mesesDiferencia <= 6;
-          } else if (filtrosSeleccionadosAdmin['rango'] === 'Último año') {
-            coincideRango = mesesDiferencia <= 12;
-          }
-        }
-
-        if (coincideCarrera && coincideTipo && coincideTexto && coincideAnio && coincideRango) {
-          (card as HTMLElement).style.display = 'flex';
-          visibles++;
-        } else {
-          (card as HTMLElement).style.display = 'none';
-        }
-      });
-
-      if (contador) contador.innerText = `Resultados encontrados (${visibles})`;
-    };
-  }, []);
+  const chipsActivos = [
+    filtroCarrera && { key: 'carrera', label: filtroCarrera },
+    filtroTipo && { key: 'tipo', label: filtroTipo },
+    filtroAnio && { key: 'anio', label: `Año: ${filtroAnio}` },
+    filtroRango && { key: 'rango', label: filtroRango }
+  ].filter(Boolean) as { key: string; label: string }[];
 
   return (
     <>
@@ -234,7 +101,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                     id="inputBusquedaAdmin"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por título, carrera..." 
+                    placeholder="Buscar por título, autor, carrera..." 
                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
               </form>
@@ -242,14 +109,12 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
 
             <div className="relative flex-shrink-0 flex items-center gap-2 sm:gap-3">
               
-              {/* ✅ Botón Volver al Panel (Solo si estás en el visor) */}
               {esVistaConBotonVolver && (
                 <button onClick={() => router.push('/admin/repositorio')} className="flex items-center justify-center bg-blue-800 hover:bg-blue-700 p-2.5 rounded-lg transition" title="Volver al repositorio">
                   <LogOut className="h-5 w-5" />
                 </button>
               )}
 
-              {/* ✅ Botón Panel (Siempre visible, responsive) */}
               <button onClick={() => router.push('/admin')} className="flex items-center justify-center bg-blue-800 hover:bg-blue-700 p-2.5 rounded-lg transition" title="Ir al Panel de Administración">
                 <span className="hidden sm:inline text-sm font-medium mr-1">Panel</span>
                 <UserCircle className="h-5 w-5" />
@@ -271,22 +136,29 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                   id="inputBusquedaAdminMovil"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por título..." 
+                  placeholder="Buscar por título, autor..." 
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800 text-sm"
               />
             </form>
             {!esVistaConBotonVolver && (
-              <button onClick={() => (window as any).toggleDrawerAdmin(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0 shadow-sm">
+              <button onClick={() => toggleDrawerAdmin(true)} className="flex items-center gap-2 px-4 py-2.5 bg-blue-700 text-white rounded-lg font-medium text-sm flex-shrink-0 shadow-sm">
                 <Filter className="h-5 w-5" /> Filtros
               </button>
             )}
           </div>
 
-          {!esVistaConBotonVolver && (
-            <div id="contenedorChipsAdmin" className="hidden flex-wrap items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+          {chipsActivos.length > 0 && (
+            <div id="contenedorChipsAdmin" className="flex flex-wrap items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
               <span className="text-xs font-semibold text-gray-500">Filtros aplicados:</span>
-              <div id="listaChipsAdmin" className="flex flex-wrap gap-2"></div>
-              <button onClick={() => (window as any).limpiarFiltrosAdmin()} className="text-xs text-red-600 hover:underline ml-auto font-medium">Limpiar todos</button>
+              <div id="listaChipsAdmin" className="flex flex-wrap gap-2">
+                {chipsActivos.map((chip) => (
+                  <span key={chip.key} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                    {chip.label}
+                    <button onClick={() => removerFiltro(chip.key)} className="hover:text-blue-900 font-bold ml-1">×</button>
+                  </span>
+                ))}
+              </div>
+              <button onClick={limpiarFiltros} className="text-xs text-red-600 hover:underline ml-auto font-medium">Limpiar todos</button>
             </div>
           )}
 
@@ -305,12 +177,9 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                         <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
                       </summary>
                       <div className="space-y-1 mt-2 pl-2">
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Informática')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Informática</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Contaduría')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Administración de Empresas')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Educación Mención: Integral')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Integral</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Educación Mención: Inicial')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Educación Inicial</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('carrera', 'Electrónica')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Electrónica</button>
+                        {['Informática', 'Contaduría', 'Administración de Empresas', 'Educación Mención: Integral', 'Educación Mención: Inicial', 'Electrónica'].map(c => (
+                          <button key={c} onClick={() => { setFiltroCarrera(c); actualizarURL('carrera', c); }} className={`block w-full text-left text-sm py-1 px-2 rounded hover:bg-blue-50 ${filtroCarrera === c ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-600'}`}>{c}</button>
+                        ))}
                       </div>
                     </details>
 
@@ -320,8 +189,9 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                         <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
                       </summary>
                       <div className="space-y-1 mt-2 pl-2">
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('tipo', 'Tesis')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Tesis</button>
-                        <button onClick={() => (window as any).seleccionarFiltroAdmin('tipo', 'Sistematización')} className="block w-full text-left text-sm text-gray-600 hover:text-blue-600 py-1 px-2 rounded hover:bg-blue-50">Sistematización</button>
+                        {['Tesis', 'Sistematización'].map(t => (
+                          <button key={t} onClick={() => { setFiltroTipo(t); actualizarURL('tipo', t); }} className={`block w-full text-left text-sm py-1 px-2 rounded hover:bg-blue-50 ${filtroTipo === t ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-600'}`}>{t}</button>
+                        ))}
                       </div>
                     </details>
 
@@ -332,19 +202,17 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                           type="number"
                           id="inputAnioAdmin"
                           placeholder="Ej. 2024"
-                          value={anioFiltro}
-                          onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                          value={filtroAnio}
+                          onChange={(e) => { setFiltroAnio(e.target.value); actualizarURL('anio', e.target.value); }}
                           className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                          min="1900"
-                          max="2100"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Rango de Fecha</label>
                         <select
                           id="selectRangoAdmin"
-                          value={rangoFiltro}
-                          onChange={(e) => aplicarFiltroRango(e.target.value)}
+                          value={filtroRango}
+                          onChange={(e) => { setFiltroRango(e.target.value); actualizarURL('rango', e.target.value); }}
                           className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                         >
                           <option value="">Cualquier fecha</option>
@@ -355,9 +223,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                       </div>
                     </div>
 
-                    <style dangerouslySetInnerHTML={{__html: `
-                      aside::-webkit-scrollbar { display: none !important; }
-                    `}} />
+                    <style dangerouslySetInnerHTML={{__html: `aside::-webkit-scrollbar { display: none !important; }`}} />
                   </aside>
                 </div>
               </div>
@@ -375,7 +241,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
           <div className="w-80 max-w-full bg-white h-full shadow-2xl p-6 flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex items-center justify-between border-b pb-4 mb-4">
               <h3 className="font-bold text-gray-900 text-lg">Filtros</h3>
-              <button onClick={() => (window as any).toggleDrawerAdmin(false)} className="p-2 text-gray-500 hover:text-gray-800 rounded-lg">
+              <button onClick={() => toggleDrawerAdmin(false)} className="p-2 text-gray-500 hover:text-gray-800 rounded-lg">
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -387,12 +253,9 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                   <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
                 </summary>
                 <div className="space-y-1 mt-2 pl-2">
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Informática'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Informática</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Contaduría'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Contaduría</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Administración de Empresas'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Administración de Empresas</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Educación Mención: Integral'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Mención: Integral</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Educación Mención: Inicial'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Educación Mención: Inicial</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('carrera', 'Electrónica'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Electrónica</button>
+                  {['Informática', 'Contaduría', 'Administración de Empresas', 'Educación Mención: Integral', 'Educación Mención: Inicial', 'Electrónica'].map(c => (
+                    <button key={c} onClick={() => { setFiltroCarrera(c); actualizarURL('carrera', c); toggleDrawerAdmin(false); }} className={`block w-full text-left text-sm py-1.5 px-2 rounded hover:bg-blue-50 ${filtroCarrera === c ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-600'}`}>{c}</button>
+                  ))}
                 </div>
               </details>
 
@@ -402,8 +265,9 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                   <span className="transition group-open:rotate-180"><ChevronDown className="h-4 w-4" /></span>
                 </summary>
                 <div className="space-y-1 mt-2 pl-2">
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('tipo', 'Tesis'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Tesis</button>
-                  <button onClick={() => { (window as any).seleccionarFiltroAdmin('tipo', 'Sistematización'); (window as any).toggleDrawerAdmin(false); }} className="block w-full text-left text-sm text-gray-600 py-1.5 px-2 rounded hover:bg-blue-50">Sistematización</button>
+                  {['Tesis', 'Sistematización'].map(t => (
+                    <button key={t} onClick={() => { setFiltroTipo(t); actualizarURL('tipo', t); toggleDrawerAdmin(false); }} className={`block w-full text-left text-sm py-1.5 px-2 rounded hover:bg-blue-50 ${filtroTipo === t ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-600'}`}>{t}</button>
+                  ))}
                 </div>
               </details>
 
@@ -414,19 +278,17 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                     type="number"
                     id="inputAnioMovilAdmin"
                     placeholder="Ej. 2024"
-                    value={anioFiltro}
-                    onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                    value={filtroAnio}
+                    onChange={(e) => { setFiltroAnio(e.target.value); actualizarURL('anio', e.target.value); }}
                     className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                    min="1900"
-                    max="2100"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Rango de Fecha</label>
                   <select
                     id="selectRangoMovilAdmin"
-                    value={rangoFiltro}
-                    onChange={(e) => aplicarFiltroRango(e.target.value)}
+                    value={filtroRango}
+                    onChange={(e) => { setFiltroRango(e.target.value); actualizarURL('rango', e.target.value); }}
                     className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="">Cualquier fecha</option>
@@ -439,17 +301,23 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
             </div>
 
             <div className="pt-4 border-t mt-4">
-              <button onClick={() => { (window as any).limpiarFiltrosAdmin(); (window as any).toggleDrawerAdmin(false); }} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold py-2.5 rounded-lg transition">
+              <button onClick={() => { limpiarFiltros(); toggleDrawerAdmin(false); }} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold py-2.5 rounded-lg transition">
                 Limpiar todos los filtros
               </button>
             </div>
 
-            <style dangerouslySetInnerHTML={{__html: `
-              #drawerMovilAdmin > div::-webkit-scrollbar { display: none !important; }
-            `}} />
+            <style dangerouslySetInnerHTML={{__html: `#drawerMovilAdmin > div::-webkit-scrollbar { display: none !important; }`}} />
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+export default function NavbarAdmin({ children }: NavbarAdminProps) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center">Cargando...</div>}>
+      <NavbarAdminContent>{children}</NavbarAdminContent>
+    </Suspense>
   );
 }

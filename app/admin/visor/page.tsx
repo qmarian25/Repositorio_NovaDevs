@@ -253,7 +253,12 @@ function VisorContent() {
               {recomendados.map((rec) => (
                 <div 
                   key={rec.id_documento} 
-                  onClick={() => { if(!isDragging) router.push(`/admin/repositorio/visor?id=${rec.id_documento}`) }}
+                  onClick={() => { 
+                  if(!isDragging) {
+                    const rutaActual = window.location.pathname;
+                    router.push(`${rutaActual}?id=${rec.id_documento}`);
+                  } 
+                }}
                   className="snap-start flex-shrink-0 w-[160px] sm:w-[200px] bg-white border border-gray-200 rounded-xl p-2 cursor-pointer hover:shadow-md transition group select-none"
                 >
                   <div className="w-full h-48 sm:h-60 bg-gray-50 rounded-lg overflow-hidden mb-3 border border-gray-100 pointer-events-none">

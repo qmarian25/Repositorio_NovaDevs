@@ -174,7 +174,6 @@ export default function LoginPage() {
               }}
               className="text-sm text-blue-600 hover:underline font-medium"
             >
-              ¿Olvidó su contraseña?
             </button>
           </div>
         </form>

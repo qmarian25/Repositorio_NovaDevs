@@ -16,16 +16,26 @@ interface DocumentoReal {
   fecha_publicacion: string;
   carrera_nombre: string;
   tipo_nombre: string;
+  autores: string;
+  etiquetas: string[];
 }
 
 function DocumentosInvitadoContent() {
   const searchParams = useSearchParams();
+  
+  // ✅ Leemos TODOS los filtros desde la URL
   const searchQuery = searchParams.get('search')?.toLowerCase() || '';
+  const filtroCarrera = searchParams.get('carrera') || '';
+  const filtroTipo = searchParams.get('tipo') || '';
+  const filtroAnio = searchParams.get('anio') || '';
+  const filtroRango = searchParams.get('rango') || '';
+
   const [documentos, setDocumentos] = useState<DocumentoReal[]>([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     const cargarDocumentos = async () => {
+      // ✅ Traemos autores y etiquetas con relaciones
       const { data, error } = await supabase
         .from('documentos')
         .select(`
@@ -36,14 +46,23 @@ function DocumentosInvitadoContent() {
           url_portada,
           fecha_publicacion,
           carrera ( nombre_carrera ),
-          tipo_documento ( nombre_tipo_documento )
+          tipo_documento ( nombre_tipo_documento ),
+          documentos_autores ( usuario ( nombre, apellido ) ),
+          documentos_etiquetas ( etiquetas ( nombre_etiqueta ) )
         `)
         .eq('activo', true)
         .order('id_documento', { ascending: false });
 
+      if (error) {
+        console.error("Error cargando documentos:", error);
+      }
+
       if (data) {
-        const docsMapeados: DocumentoReal[] = data
-          .map((doc: any) => ({
+        const docsMapeados: DocumentoReal[] = data.map((doc: any) => {
+          const autoresArray = doc.documentos_autores?.map((da: any) => `${da.usuario?.nombre || ''} ${da.usuario?.apellido || ''}`.trim()) || [];
+          const etiquetasArray = doc.documentos_etiquetas?.map((de: any) => de.etiquetas?.nombre_etiqueta).filter(Boolean) || [];
+
+          return {
             id_documento: doc.id_documento,
             titulo: doc.titulo,
             descripcion: doc.descripcion,
@@ -52,26 +71,61 @@ function DocumentosInvitadoContent() {
             fecha_publicacion: doc.fecha_publicacion,
             carrera_nombre: doc.carrera?.nombre_carrera || 'Sin carrera',
             tipo_nombre: doc.tipo_documento?.nombre_tipo_documento || 'Sin tipo',
-          }))
-          .filter((doc) => {
-            if (!searchQuery) return true;
-            const texto = `${doc.titulo.toLowerCase()} ${doc.descripcion?.toLowerCase() ?? ''} ${doc.carrera_nombre.toLowerCase() ?? ''} ${doc.tipo_nombre.toLowerCase() ?? ''}`;
-            return texto.includes(searchQuery);
-          });
+            autores: autoresArray.filter(Boolean).join(', '),
+            etiquetas: etiquetasArray,
+          };
+        });
         setDocumentos(docsMapeados);
       }
       setCargando(false);
     };
 
     cargarDocumentos();
-  }, [searchQuery]);
+  }, []);
+
+  // ✅ FILTRADO EN TIEMPO REAL
+  const documentosFiltrados = documentos.filter((doc) => {
+    // 1. Búsqueda por texto (Título, descripción, carrera, tipo, autores y etiquetas)
+    let coincideTexto = true;
+    if (searchQuery) {
+      const busquedaCompleta = `${doc.titulo} ${doc.descripcion} ${doc.carrera_nombre} ${doc.tipo_nombre} ${doc.autores} ${doc.etiquetas.join(' ')}`.toLowerCase();
+      coincideTexto = busquedaCompleta.includes(searchQuery);
+    }
+
+    // 2. Filtro de Carrera
+    let coincideCarrera = !filtroCarrera || doc.carrera_nombre === filtroCarrera;
+
+    // 3. Filtro de Tipo
+    let coincideTipo = !filtroTipo || doc.tipo_nombre === filtroTipo;
+
+    // 4. Filtro de Año y Rango
+    let coincideAnio = true;
+    let coincideRango = true;
+    
+    if (doc.fecha_publicacion) {
+      const fecha = new Date(doc.fecha_publicacion);
+      const anioDoc = fecha.getFullYear().toString();
+      const hoy = new Date();
+      const mesesDiferencia = (hoy.getFullYear() - fecha.getFullYear()) * 12 + (hoy.getMonth() - fecha.getMonth());
+
+      if (filtroAnio) coincideAnio = anioDoc === filtroAnio;
+
+      if (filtroRango) {
+        if (filtroRango === 'Último mes') coincideRango = mesesDiferencia <= 1;
+        else if (filtroRango === 'Últimos 6 meses') coincideRango = mesesDiferencia <= 6;
+        else if (filtroRango === 'Último año') coincideRango = mesesDiferencia <= 12;
+      }
+    }
+
+    return coincideTexto && coincideCarrera && coincideTipo && coincideAnio && coincideRango;
+  });
 
   return (
     <section className="space-y-3 sm:space-y-4 md:space-y-6 w-full pb-16 min-w-0">
       
       <div id="contenedorContadorInvitado" className="flex justify-between items-center mb-1.5 sm:mb-2 px-0.5 sm:px-1">
         <h2 className="text-[11px] sm:text-xs md:text-sm font-bold text-gray-700" id="contadorResultadosInvitado">
-          Resultados encontrados ({documentos.length})
+          Resultados encontrados ({documentosFiltrados.length})
         </h2>
       </div>
 
@@ -79,8 +133,8 @@ function DocumentosInvitadoContent() {
         <div className="flex justify-center items-center py-20 w-full col-span-full">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
         </div>
-      ) : documentos.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center space-y-4 w-full">
+      ) : documentosFiltrados.length === 0 ? (
+        <div id="no-resultados-invitado" className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center space-y-4 w-full">
           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
             <SearchX className="h-8 w-8" />
           </div>
@@ -94,15 +148,10 @@ function DocumentosInvitadoContent() {
           id="listaResultadosInvitado" 
           className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 w-full min-w-0"
         >
-          {documentos.map((doc) => (
+          {documentosFiltrados.map((doc) => (
             <div 
               key={doc.id_documento}
               className="documento-card bg-white border border-gray-200/90 rounded-lg sm:rounded-xl md:rounded-2xl p-1.5 sm:p-2 md:p-2.5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group relative bg-gradient-to-b from-white to-gray-50/30 w-full min-w-0 overflow-hidden"
-              data-carrera={doc.carrera_nombre}
-              data-tipo={doc.tipo_nombre}
-              // ✅ Agregamos data-fecha para que los filtros de fecha funcionen
-              data-fecha={new Date(doc.fecha_publicacion).toISOString()}
-              data-texto={`${doc.titulo.toLowerCase()} ${doc.descripcion?.toLowerCase() ?? ''}`}
             >
               <div className="space-y-1.5 sm:space-y-2 min-w-0 flex flex-col h-full">
                 
