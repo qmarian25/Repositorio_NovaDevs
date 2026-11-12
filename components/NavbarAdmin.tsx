@@ -30,7 +30,8 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
   };
 
   const aplicarFiltroAnio = (anio: string) => {
-    setAnioFiltro(anio);
+    const anioLimpio = anio.replace(/-/g, '').replace(/\D/g, '');
+    setAnioFiltro(anioLimpio);
     setRangoFiltro(''); 
     
     const selectRango = document.getElementById('selectRangoAdmin') as HTMLSelectElement;
@@ -38,10 +39,10 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
     if (selectRango) selectRango.value = '';
     if (selectRangoMovil) selectRangoMovil.value = '';
 
-    if (!anio.trim()) {
+    if (!anioLimpio.trim()) {
       (window as any).removerFiltroAdmin('anio');
     } else {
-      (window as any).seleccionarFiltroAdmin('anio', anio.trim());
+      (window as any).seleccionarFiltroAdmin('anio', anioLimpio.trim());
     }
   };
 
@@ -234,7 +235,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                     id="inputBusquedaAdmin"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por título, carrera..." 
+                    placeholder="Buscar por título, autor, carrera..." 
                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
               </form>
@@ -334,6 +335,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                           placeholder="Ej. 2024"
                           value={anioFiltro}
                           onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                           className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                           min="1900"
                           max="2100"
@@ -416,6 +418,7 @@ export default function NavbarAdmin({ children }: NavbarAdminProps) {
                     placeholder="Ej. 2024"
                     value={anioFiltro}
                     onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                     className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                     min="1900"
                     max="2100"

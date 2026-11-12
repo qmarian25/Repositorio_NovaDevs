@@ -17,12 +17,18 @@ interface DocumentoReal {
   carrera_nombre: string;
   tipo_nombre: string;
   etiquetas: string[];
+  autores: string;
+  anio_publicacion: string;
   guardado?: boolean;
 }
 
+const normalizarTexto = (texto: string) =>
+  texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function DocumentosContent() {
   const searchParams = useSearchParams();
-  const searchQuery = searchParams.get('search')?.toLowerCase() || '';
+  const rawQuery = searchParams.get('search') || '';
+  const searchQuery = normalizarTexto(rawQuery);
   const [documentos, setDocumentos] = useState<DocumentoReal[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -39,7 +45,8 @@ function DocumentosContent() {
           fecha_publicacion,
           carrera ( nombre_carrera ),
           tipo_documento ( nombre_tipo_documento ),
-          documentos_etiquetas ( etiquetas ( nombre_etiqueta ) )
+          documentos_etiquetas ( etiquetas ( nombre_etiqueta ) ),
+          documentos_autores ( usuario ( nombre, apellido ) )
         `)
         .eq('activo', true)
         .order('id_documento', { ascending: false });
@@ -56,12 +63,15 @@ function DocumentosContent() {
             carrera_nombre: doc.carrera?.nombre_carrera || 'Sin carrera',
             tipo_nombre: doc.tipo_documento?.nombre_tipo_documento || 'Sin tipo',
             etiquetas: doc.documentos_etiquetas?.map((de: any) => de.etiquetas?.nombre_etiqueta).filter(Boolean) || [],
+            autores: doc.documentos_autores?.map((da: any) => `${da.usuario?.nombre ?? ''} ${da.usuario?.apellido ?? ''}`.trim()).filter(Boolean).join(', ') || 'Sin autores',
+            anio_publicacion: new Date(doc.fecha_publicacion).getFullYear().toString(),
             guardado: false,
           }))
           .filter((doc) => {
             if (!searchQuery) return true;
-            const texto = `${doc.titulo.toLowerCase()} ${doc.descripcion?.toLowerCase() ?? ''} ${doc.etiquetas?.join(' ') ?? ''}`;
-            return texto.includes(searchQuery);
+            const texto = normalizarTexto(`${doc.titulo} ${doc.descripcion ?? ''} ${doc.carrera_nombre} ${doc.tipo_nombre} ${doc.etiquetas?.join(' ') ?? ''} ${doc.autores} ${doc.anio_publicacion}`);
+            const terminos = searchQuery.split(/\s+/).filter(Boolean);
+            return terminos.every(t => texto.includes(t));
           });
         setDocumentos(docsMapeados);
       }

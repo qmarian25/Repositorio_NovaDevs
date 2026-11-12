@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Footer from '@/components/Footer';
 import { logout } from '@/lib/auth';
 import { useAuth } from '@/lib/auth-context';
@@ -15,7 +15,8 @@ export default function NavbarUser({ children }: NavbarUserProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { usuario } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   
   const [anioFiltro, setAnioFiltro] = useState('');
   const [rangoFiltro, setRangoFiltro] = useState('');
@@ -25,26 +26,26 @@ export default function NavbarUser({ children }: NavbarUserProps) {
   const handleBuscar = (e?: React.FormEvent | React.KeyboardEvent) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/invitado?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      if (pathname === '/') router.push('/');
-      else router.push('/');
+      if (pathname === '/invitado') router.push('/invitado');
+      else router.push('/invitado');
     }
   };
 
   // ✅ Lógica para el filtro de Año
   const aplicarFiltroAnio = (anio: string) => {
-    setAnioFiltro(anio);
+    const anioLimpio = anio.replace(/-/g, '').replace(/\D/g, '');
+    setAnioFiltro(anioLimpio);
     setRangoFiltro(''); // Limpiamos el rango si escribe un año
     
-    // Limpiamos el select visualmente
     const selectRango = document.getElementById('selectRango') as HTMLSelectElement;
     if (selectRango) selectRango.value = '';
 
-    if (!anio.trim()) {
+    if (!anioLimpio.trim()) {
       (window as any).removerFiltro('anio');
     } else {
-      (window as any).seleccionarFiltro('anio', anio.trim());
+      (window as any).seleccionarFiltro('anio', anioLimpio.trim());
     }
   };
 
@@ -363,6 +364,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                         placeholder="Ej. 2024"
                         value={anioFiltro}
                         onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                         className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                         min="1900"
                         max="2100"
@@ -445,6 +447,7 @@ export default function NavbarUser({ children }: NavbarUserProps) {
                   placeholder="Ej. 2024"
                   value={anioFiltro}
                   onChange={(e) => aplicarFiltroAnio(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                   className="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
                   min="1900"
                   max="2100"
