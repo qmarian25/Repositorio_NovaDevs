@@ -22,7 +22,6 @@ function NavbarAdminContent({ children }: NavbarAdminProps) {
 
   const esVistaConBotonVolver = pathname.includes('/visor');
 
-  // ✅ Sincronizar los estados locales con los parámetros de la URL
   useEffect(() => {
     setSearchQuery(searchParams.get('search') || '');
     setFiltroCarrera(searchParams.get('carrera') || '');
@@ -31,7 +30,6 @@ function NavbarAdminContent({ children }: NavbarAdminProps) {
     setFiltroRango(searchParams.get('rango') || '');
   }, [searchParams]);
 
-  // ✅ Función para actualizar la URL (Filtrado en la página)
   const actualizarURL = (key: string, value: string) => {
     const params = new URLSearchParams(window.location.search);
     if (value) {

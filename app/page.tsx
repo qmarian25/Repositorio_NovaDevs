@@ -17,7 +17,7 @@ interface DocumentoReal {
   carrera_nombre: string;
   tipo_nombre: string;
   autores: string;
-  etiquetas: string[]; // ✅ Agregado
+  etiquetas: string[];
 }
 
 function DocumentosContent() {
@@ -34,7 +34,7 @@ function DocumentosContent() {
 
   useEffect(() => {
     const cargarDocumentos = async () => {
-      // ✅ Incluimos la relación con las etiquetas en la consulta
+      // ✅ Consulta limpia con autores y etiquetas
       const { data, error } = await supabase
         .from('documentos')
         .select(`
@@ -58,9 +58,9 @@ function DocumentosContent() {
 
       if (data) {
         const docsMapeados: DocumentoReal[] = data.map((doc: any) => {
-          const autoresArray = doc.documentos_autores?.map((da: any) => `${da.usuario?.nombre || ''} ${da.usuario?.apellido || ''}`.trim()) || [];
+          const autoresArray = doc.documentos_autores
+            ?.map((da: any) => `${da.usuario?.nombre || ''} ${da.usuario?.apellido || ''}`.trim()) || [];
           
-          // ✅ Extraemos las etiquetas correctamente de la relación
           const etiquetasArray = doc.documentos_etiquetas
             ?.map((de: any) => de.etiquetas?.nombre_etiqueta)
             .filter(Boolean) || [];
@@ -74,7 +74,7 @@ function DocumentosContent() {
             fecha_publicacion: doc.fecha_publicacion,
             carrera_nombre: doc.carrera?.nombre_carrera || 'Sin carrera',
             tipo_nombre: doc.tipo_documento?.nombre_tipo_documento || 'Sin tipo',
-            autores: autoresArray.filter(Boolean).join(', '), 
+            autores: autoresArray.filter(Boolean).join(', '),
             etiquetas: etiquetasArray,
           };
         });
@@ -86,10 +86,10 @@ function DocumentosContent() {
     cargarDocumentos();
   }, []);
 
+  // ✅ Filtrado en tiempo real
   const documentosFiltrados = documentos.filter((doc) => {
     let coincideTexto = true;
     if (searchQuery) {
-      // ✅ Aquí incluimos las etiquetas en la búsqueda
       const busquedaCompleta = `${doc.titulo} ${doc.descripcion} ${doc.carrera_nombre} ${doc.tipo_nombre} ${doc.autores} ${doc.etiquetas.join(' ')}`.toLowerCase();
       coincideTexto = busquedaCompleta.includes(searchQuery);
     }

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import NavbarAdmin from '@/components/NavbarAdmin';
 import { supabase } from '@/lib/supabase';
 import { SearchX } from 'lucide-react';
-import PdfThumbnail from '../modals/PdfThumbnail'; // Ajusta la ruta si es necesario
+import PdfThumbnail from '../modals/PdfThumbnail'; 
 
 interface DocumentoReal {
   id_documento: number;
@@ -35,7 +35,6 @@ function RepositorioAdminContent() {
 
   useEffect(() => {
     const cargarDocumentos = async () => {
-      // ✅ Traemos autores y etiquetas con las relaciones de Supabase
       const { data, error } = await supabase
         .from('documentos')
         .select(`
@@ -85,20 +84,15 @@ function RepositorioAdminContent() {
 
   // ✅ FILTRADO EN TIEMPO REAL
   const documentosFiltrados = documentos.filter((doc) => {
-    // 1. Búsqueda por texto (Título, descripción, carrera, tipo, autores y etiquetas)
     let coincideTexto = true;
     if (searchQuery) {
       const busquedaCompleta = `${doc.titulo} ${doc.descripcion} ${doc.carrera_nombre} ${doc.tipo_nombre} ${doc.autores} ${doc.etiquetas.join(' ')}`.toLowerCase();
       coincideTexto = busquedaCompleta.includes(searchQuery);
     }
 
-    // 2. Filtro de Carrera
     let coincideCarrera = !filtroCarrera || doc.carrera_nombre === filtroCarrera;
-
-    // 3. Filtro de Tipo
     let coincideTipo = !filtroTipo || doc.tipo_nombre === filtroTipo;
 
-    // 4. Filtro de Año y Rango
     let coincideAnio = true;
     let coincideRango = true;
     
@@ -174,7 +168,7 @@ function RepositorioAdminContent() {
                     {doc.tipo_nombre}
                   </span>
                   
-                  <a href={`/admin/repositorio/visor?id=${doc.id_documento}`} className="block min-w-0">
+                  <a href={`/admin/visor?id=${doc.id_documento}`} className="block min-w-0">
                     <h3 className="font-bold text-gray-900 text-[9px] sm:text-[10px] md:text-[11px] lg:text-xs line-clamp-2 leading-tight sm:leading-snug group-hover:text-blue-700 transition break-words">
                       {doc.titulo}
                     </h3>
