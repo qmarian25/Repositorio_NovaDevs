@@ -72,7 +72,7 @@ export default function SeccionDocumentos() {
       .from('documentos')
       .select('*')
       .eq('activo', true)
-      .order('id_documento', { ascending: true });
+      .order('id_documento', { ascending: false });
     if (docsData) setListaDocumentos(docsData);
 
     if (docsData && docsData.length > 0) {
